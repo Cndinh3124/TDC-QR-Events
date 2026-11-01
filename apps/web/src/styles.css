@@ -1,0 +1,151 @@
+/* Design tokens + thanh phan - theo docs/dac-ta/chot-giao-dien.md */
+:root {
+  --navy: #0b3a86;
+  --nav-active: #1f56b3;
+  --nav-text: #e4ecf8;
+  --nav-label: #8fa9d6;
+  --primary: #1f66d1;
+  --tint: #e6eefb;
+  --bg: #f3f6fb;
+  --surface: #fff;
+  --border: #e1e7f0;
+  --divider: #eaeef4;
+  --text: #13213c;
+  --muted: #5b6678;
+  --faint: #8a94a8;
+  --ok-fg: #1c6b45; --ok-bg: #e3f1ea;
+  --wait-fg: #8a5a00; --wait-bg: #fff4e0;
+  --info-fg: #2155ae; --info-bg: #e6eefb;
+  --err-fg: #a12a2a; --err-bg: #fbeaea;
+  --draft-fg: #5b6678; --draft-bg: #eef1f5;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 400 16px/1.5 'Open Sans', system-ui, sans-serif;
+}
+h1 { font-size: 26px; font-weight: 700; margin: 0 0 4px; }
+h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+.sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+.mono { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace; font-size: 14px; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* khung quan tri */
+.shell { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+.side { background: var(--navy); color: var(--nav-text); font-family: Roboto, sans-serif; padding: 20px 12px; }
+.side .brand { display: flex; align-items: center; gap: 10px; padding: 4px 12px 20px; font-weight: 700; font-size: 18px; }
+.side .group { color: var(--nav-label); font-size: 13px; font-weight: 600; text-transform: uppercase; padding: 12px 12px 6px; }
+.side a { display: block; color: var(--nav-text); font-size: 16px; font-weight: 500; padding: 9px 12px; border-radius: 10px; }
+.side a:hover { text-decoration: none; background: rgba(255, 255, 255, 0.08); }
+.side a.active { background: var(--nav-active); }
+.main { display: flex; flex-direction: column; min-width: 0; }
+.top { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; justify-content: flex-end; align-items: center; gap: 14px; font-size: 14px; }
+.content { padding: 28px; max-width: 1100px; width: 100%; }
+
+/* the, nut, o nhap */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.btn { font: 600 15px 'Open Sans', sans-serif; border-radius: 10px; padding: 9px 16px; border: 1px solid #d6deea; background: #fff; color: var(--text); cursor: pointer; }
+.btn:hover { background: #f7f9fc; }
+.btn:disabled { opacity: 0.55; cursor: default; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover { background: #1a58b8; }
+.btn.danger { border-color: #efc4c4; color: var(--err-fg); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.field { display: block; margin-bottom: 14px; }
+.field > span { display: block; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+.field input:not([type='checkbox']), .field select, .field textarea {
+  width: 100%; font: 400 16px 'Open Sans', sans-serif; padding: 10px 12px;
+  border: 1px solid #d6deea; border-radius: 10px; background: #fff; color: var(--text);
+}
+.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--tint); border-color: var(--primary); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.check { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
+.error { background: var(--err-bg); color: var(--err-fg); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-bottom: 14px; }
+.notice { background: var(--tint); color: var(--info-fg); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-bottom: 14px; }
+
+/* bang */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 14px; font-weight: 600; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--divider); }
+td { padding: 12px; border-bottom: 1px solid var(--divider); font-size: 15px; }
+tr:last-child td { border-bottom: 0; }
+
+/* nhan trang thai */
+.badge { display: inline-block; font-size: 13px; font-weight: 600; border-radius: 12px; padding: 2px 10px; }
+.badge.ok { color: var(--ok-fg); background: var(--ok-bg); }
+.badge.wait { color: var(--wait-fg); background: var(--wait-bg); }
+.badge.info { color: var(--info-fg); background: var(--info-bg); }
+.badge.err { color: var(--err-fg); background: var(--err-bg); }
+.badge.draft { color: var(--draft-fg); background: var(--draft-bg); }
+
+/* thanh phan doan */
+.seg { display: inline-flex; background: #e8edf5; border-radius: 10px; padding: 3px; margin-bottom: 16px; }
+.seg button { border: 0; background: transparent; font: 600 14px 'Open Sans', sans-serif; padding: 6px 14px; border-radius: 8px; color: var(--muted); cursor: pointer; }
+.seg button.on { background: #fff; color: var(--text); }
+
+/* so lieu */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.stat b { display: block; font-size: 30px; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 14px; color: var(--muted); }
+.qr { text-align: center; }
+.qr img { width: 100%; max-width: 280px; image-rendering: pixelated; }
+
+/* dang nhap */
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: var(--navy); }
+.login-card { background: #fff; border-radius: 14px; padding: 32px; width: 100%; max-width: 400px; }
+.login-card img { width: 100%; margin-bottom: 18px; }
+
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { display: flex; align-items: center; gap: 8px; padding: 8px 12px; overflow-x: auto; }
+  .side .brand, .side .group { display: none; }
+  .content { padding: 16px; }
+  .grid2, .stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* trang diem danh cong khai (mobile-first) */
+.pub { min-height: 100vh; background: var(--bg); }
+.pub-head { background: var(--navy); color: #fff; padding: 18px 20px 54px; font-size: 14px; }
+.pub-head b { display: block; font-size: 22px; margin-top: 2px; }
+.pub-body { max-width: 480px; margin: -38px auto 0; padding: 0 16px 40px; }
+.pub-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 16px; }
+.pub-card .field input:not([type='checkbox']), .pub-card .field select { font-size: 16px; padding: 12px; } /* >= 16px: iPhone khong tu phong to */
+.pub-btn { width: 100%; padding: 13px 16px; font-size: 16px; }
+.ticket-code { background: var(--tint); border-radius: 12px; padding: 12px 16px; margin: 16px 0; text-align: center; }
+.ticket-code span { display: block; font-size: 13px; color: var(--muted); }
+.ticket-code b { font-size: 28px; color: var(--navy); letter-spacing: 2px; }
+
+/* hop thoai, thanh thao tac, nhan co */
+.overlay { position: fixed; inset: 0; background: rgba(19, 33, 60, 0.45); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.dialog { background: #fff; border-radius: 14px; padding: 22px; width: 100%; max-width: 520px; max-height: 90vh; overflow: auto; }
+.bulkbar { background: var(--tint); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flag { display: inline-block; font-size: 12px; font-weight: 600; color: var(--err-fg); background: var(--err-bg); border-radius: 10px; padding: 1px 8px; margin: 1px 3px 1px 0; }
+.flag.info { color: var(--info-fg); background: var(--info-bg); }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.toolbar input, .toolbar select { font: 400 15px 'Open Sans', sans-serif; padding: 8px 12px; border: 1px solid #d6deea; border-radius: 10px; background: #fff; }
+.link { background: none; border: 0; padding: 0; color: var(--primary); font: 600 14px 'Open Sans', sans-serif; cursor: pointer; }
+.link.danger { color: var(--err-fg); }
+.tablewrap { overflow-x: auto; }
+.pager { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: 14px; color: var(--muted); }
+.content.wide { max-width: 1280px; }
+
+/* tong quan */
+.stats.six { grid-template-columns: repeat(3, 1fr); }
+.stat small { display: block; font-size: 13px; margin-top: 2px; color: var(--faint); }
+.delta.up { color: var(--ok-fg); } .delta.down { color: var(--err-fg); }
+.hbar { display: grid; grid-template-columns: 170px 1fr 48px; gap: 10px; align-items: center; margin: 6px 0; font-size: 14px; }
+.hbar-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hbar-track { background: var(--draft-bg); border-radius: 6px; height: 12px; overflow: hidden; }
+.hbar-track span { display: block; height: 100%; background: var(--primary); border-radius: 6px; }
+.hbar b { text-align: right; font-variant-numeric: tabular-nums; }
+.cols2 { display: grid; grid-template-columns: 3fr 2fr; gap: 20px; }
+.legend { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; }
+.remind { border-left: 4px solid #f0b45a; background: var(--wait-bg); }
+.remind.late { border-left-color: #d96666; background: var(--err-bg); }
+.remind ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
+.audit-detail { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 13px; white-space: pre-wrap; word-break: break-word; margin: 4px 0 0; max-height: 220px; overflow: auto; }
+.nav-badge { background: #e5484d; color: #fff; border-radius: 10px; font-size: 12px; padding: 0 7px; margin-left: 6px; }
+@media (max-width: 900px) { .cols2 { grid-template-columns: 1fr; } .stats.six { grid-template-columns: 1fr 1fr; } .hbar { grid-template-columns: 110px 1fr 40px; } }

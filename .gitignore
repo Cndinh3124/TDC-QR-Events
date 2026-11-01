@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+coverage
+*.log
+loadtest/results/
+.DS_Store
+**/cookies.txt
+TDC-QR-Events-tai-lieu/

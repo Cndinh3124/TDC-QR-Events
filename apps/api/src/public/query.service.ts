@@ -1,0 +1,107 @@
+// Cac API doc cua trang diem danh: danh sach khoa, thong tin su kien theo token, lich su - dac ta 3.3, 5.4, 7
+import { Injectable } from '@nestjs/common';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { checkinState } from '../events/event-rules';
+import { Event } from '../events/entities/event.entity';
+import { Unit } from '../units/entities/unit.entity';
+import { Attendance } from './entities/attendance.entity';
+import { DeviceIdentity } from './device.service';
+import { PublicLookupService } from './public-lookup.service';
+
+export interface PublicEvent {
+  title: string;
+  description: string | null;
+  locationName: string | null;
+  startAt: Date;
+  endAt: Date;
+  checkinOpenAt: Date;
+  checkinCloseAt: Date;
+  // [BM] khong tra toa do / ban kinh: nguoi nhan anh QR tu xa se gia GPS khop duoc. Khoang cach tinh o server.
+  requiresGps: boolean;
+  requireCheckout: boolean;
+}
+
+const HISTORY_LIMIT = 50;
+
+const toPublicEvent = (e: Event): PublicEvent => ({
+  title: e.title,
+  description: e.description,
+  locationName: e.locationName,
+  startAt: e.startAt,
+  endAt: e.endAt,
+  checkinOpenAt: e.checkinOpenAt,
+  checkinCloseAt: e.checkinCloseAt,
+  requiresGps: e.latitude !== null,
+  requireCheckout: e.requireCheckout,
+});
+
+@Injectable()
+export class QueryService {
+  constructor(
+    @InjectDataSource() private readonly ds: DataSource,
+    private readonly lookup: PublicLookupService,
+  ) {}
+
+  // [NV] 2.1: chi khoa dang hoat dong, khong co Doan truong
+  async faculties(): Promise<Array<{ id: string; name: string; code: string }>> {
+    const rows = await this.ds.getRepository(Unit).find({ where: { type: 'FACULTY', isActive: true }, order: { name: 'ASC' } });
+    return rows.map((u) => ({ id: u.id, name: u.name, code: u.code }));
+  }
+
+  async eventByToken(device: DeviceIdentity, token: string) {
+    const { event, purpose } = await this.lookup.resolveToken(token);
+    const state = checkinState(event, new Date());
+    const repo = this.ds.getRepository(Attendance);
+    const mine = await repo.findOne({ where: { eventId: event.id, deviceId: device.id } });
+    // [NV] 3.3: dien san thong tin neu thiet bi da tung diem danh
+    const last = mine ? null : await repo.findOne({ where: { deviceId: device.id }, order: { checkinAt: 'DESC' } });
+    return {
+      event: toPublicEvent(event),
+      purpose,
+      state,
+      verifyCodeRequired: purpose === 'CHECKOUT' && event.controlLevel === 'TIGHT',
+      appeal: await this.appealInfo(event),
+      mssvRegex: (await this.lookup.mssvRegex()).source,
+      attendance: mine ? this.lookup.toView(mine, state) : null,
+      prefill: last ? { mssv: last.mssv, fullName: last.fullName, facultyUnitId: last.facultyUnitId, email: last.email } : null,
+      // ban sao cookie cho localStorage cua client - dac ta 4
+      deviceToken: device.token,
+    };
+  }
+
+  // [NV] 3.5: giao dien chi hien nut "Gui khieu nai" khi open = true
+  private async appealInfo(event: Event): Promise<{ open: boolean; deadlineAt: Date }> {
+    const deadlineAt = await this.lookup.appealDeadline(event);
+    const blocked = event.archivedAt !== null || event.status === 'DRAFT' || event.status === 'CANCELLED';
+    return { open: !blocked && new Date() <= deadlineAt, deadlineAt };
+  }
+
+  // [NV] 5.4: lich su cua cac MSSV hien dang gan voi thiet bi nay, ke ca luot do thiet bi khac diem danh,
+  // de nguoi bi diem danh ho tu phat hien. Chi tra ten su kien + gio; ma xac nhan chi cua luot tu thiet bi nay.
+  async history(device: DeviceIdentity | null) {
+    if (!device) return { items: [] };
+    const mine = await this.ds.query(
+      'SELECT DISTINCT mssv FROM attendances WHERE device_id = ? AND voided_at IS NULL',
+      [device.id],
+    );
+    if (mine.length === 0) return { items: [] };
+    const rows = await this.ds
+      .createQueryBuilder(Attendance, 'a')
+      .innerJoin(Event, 'e', 'e.id = a.eventId')
+      .select(['a.deviceId AS deviceId', 'a.checkinAt AS checkinAt', 'a.checkoutAt AS checkoutAt',
+        'a.timeliness AS timeliness', 'a.confirmCode AS confirmCode', 'e.title AS title', 'e.startAt AS startAt'])
+      .where('a.mssv IN (:...mssvs) AND a.voidedAt IS NULL', { mssvs: mine.map((r: { mssv: string }) => r.mssv) })
+      .orderBy('a.checkinAt', 'DESC')
+      .limit(HISTORY_LIMIT)
+      .getRawMany();
+    const items = rows.map((r) => {
+      const viaThisDevice = r.deviceId === device.id;
+      return {
+        eventTitle: r.title, eventStartAt: r.startAt, checkinAt: r.checkinAt, checkoutAt: r.checkoutAt,
+        timeliness: r.timeliness, viaThisDevice, confirmCode: viaThisDevice ? r.confirmCode : null,
+      };
+    });
+    return { items };
+  }
+}
