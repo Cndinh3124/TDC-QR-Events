@@ -14,7 +14,11 @@ WORKDIR /repo
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 # chi cai thu vien chay that, khong co cong cu dev
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force \
+    # [BM] go npm/npx/corepack khoi image chay: container chi can `node`, con cac goi di kem npm
+    # (pacote, sigstore, brace-expansion...) la ngoai ung dung va hay co CVE. Thu nho be mat tan cong.
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+              /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /root/.npm /tmp/*
 COPY --from=build /repo/apps/api/dist apps/api/dist
 COPY apps/api/assets apps/api/assets
 USER node
