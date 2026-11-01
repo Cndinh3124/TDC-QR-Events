@@ -434,3 +434,26 @@ export interface BulkResult {
   done: string[];
   failed: Array<{ id: string; message: string }>;
 }
+
+export interface ActivityGroup {
+  key: string;
+  label: string;
+  total: number;
+  completed: number;
+  notCompleted: number;
+  withMedia: number;
+  participants: number;
+}
+
+export interface ActivityStats {
+  year: { id: string; name: string };
+  kpi: {
+    total: number; evaluated: number; completed: number; notCompleted: number; completionRate: number | null; rewarded: number;
+    participants: number; withMedia: number; missingMedia: number; mediaLinks: number; publicationLinks: number;
+    budgetPlanned: number; budgetActual: number;
+  };
+  byStatus: Record<string, number>;
+  byUnit: ActivityGroup[];
+  byCategory: ActivityGroup[];
+  byMonth: ActivityGroup[];
+}
