@@ -305,6 +305,7 @@ describe('Quan ly hoat dong', () => {
       const re = (await act(admin, a.id, 'reopen', { reason: 'Nhap nham diem thuong' })).body;
       expect(re).toMatchObject({ status: 'EVALUATED', reward: null, lockedAt: null, evaluation: 'COMPLETED' });
       const tl = (await as(app, admin).get(`/api/admin/activities/${a.id}/timeline`).expect(200)).body.items;
+      expect(tl.filter((i: { kind: string }) => i.kind === 'VERSION')).toHaveLength(1); // chi lan sua tay (them link ket qua), khong lap lai buoc quy trinh
       expect(tl.filter((i: { kind: string }) => i.kind === 'WORKFLOW').map((i: { action: string }) => i.action)).toEqual(['SUBMIT', 'APPROVE', 'SUBMIT_RESULT', 'EVALUATE', 'REWARD', 'REOPEN']);
       for (const code of ['ACTIVITY_SUBMIT', 'ACTIVITY_APPROVE', 'ACTIVITY_EVALUATE', 'ACTIVITY_REWARD', 'ACTIVITY_REOPEN']) {
         expect((await as(app, admin).get(`/api/admin/audit-logs?action=${code}`).expect(200)).body.total).toBe(1);
