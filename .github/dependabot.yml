@@ -4,6 +4,11 @@ updates:
     directory: /
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
+    ignore:
+      # Cac goi @nestjs phai cung mot ban chinh. Ban 12 cua @nestjs/typeorm va @nestjs/platform-express
+      # chi co dang ESM, jest (CommonJS) khong nap duoc. Nang ca bo NestJS len 12 bang tay trong mot PR rieng.
+      - dependency-name: "@nestjs/*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
