@@ -54,12 +54,19 @@ describe('Su kien', () => {
       const e = await create(admin);
       expect(e).toMatchObject({ status: 'DRAFT', graceMinutes: 15, controlLevel: 'NORMAL', requireCheckout: false, hasVerifyCode: false, checkinState: 'NOT_AVAILABLE' });
       expect(e.unit.code).toBe('DTN');
+      // giao dien dua vao type de biet day la su kien cap truong (hien tab "Chia se cho khoa")
+      expect(e.unit.type).toBe('SCHOOL');
       // mo truoc 30 phut (default_open_before_min), dong luc ket thuc
       expect(new Date(e.startAt).getTime() - new Date(e.checkinOpenAt).getTime()).toBe(30 * 60_000);
       expect(e.checkinCloseAt).toBe(e.endAt);
       const logs = await audit('EVENT_CREATE');
       expect(logs.total).toBe(1);
       expect(logs.items[0].afterJson.title).toBe('Chào tân sinh viên');
+    });
+
+    it('su kien cap khoa co unit.type FACULTY', async () => {
+      const e = await create(cntt);
+      expect(e.unit.type).toBe('FACULTY');
     });
 
     it('[BM] response khong lo hash ma 4 so; token QR khong nam trong response / nhat ky', async () => {

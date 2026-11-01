@@ -151,3 +151,18 @@ export interface AppealInput {
 
 export const sendAppeal = (input: AppealInput) => call<MyAppeal>('POST', '/appeals', input);
 export const myAppeals = () => call<{ items: MyAppeal[] }>('GET', '/me/appeals');
+
+// ---------- tra cuu lich su (P06) ----------
+
+export interface HistoryItem {
+  eventTitle: string;
+  eventStartAt: string;
+  checkinAt: string;
+  checkoutAt: string | null;
+  timeliness: 'ON_TIME' | 'LATE';
+  // false = luot do thiet bi KHAC diem danh cho MSSV dang gan voi may nay (dau hieu bi diem danh ho)
+  viaThisDevice: boolean;
+  confirmCode: string | null;
+}
+
+export const myHistory = () => call<{ items: HistoryItem[] }>('GET', '/me/history');
