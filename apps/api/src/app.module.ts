@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ActivitiesModule } from './activities/activities.module';
 import { AppealsModule } from './appeals/appeals.module';
 import { AttendancesModule } from './attendances/attendances.module';
 import { AuditModule } from './audit/audit.module';
@@ -38,6 +39,7 @@ import { UsersModule } from './users/users.module';
     PublicModule,
     AttendancesModule,
     AppealsModule,
+    ActivitiesModule,
     StudentsModule,
     ReportsModule,
     DashboardModule,

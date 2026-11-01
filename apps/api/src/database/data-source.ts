@@ -19,6 +19,14 @@ import { AttendanceEdit } from '../public/entities/attendance-edit.entity';
 import { AttendanceJob } from '../public/entities/attendance-job.entity';
 import { EventCounter } from '../public/entities/event-counter.entity';
 import { EventCodeFailure } from '../public/entities/event-code-failure.entity';
+import { AcademicYear } from '../activities/entities/academic-year.entity';
+import { ActivityCategory } from '../activities/entities/activity-category.entity';
+import { ActivityCodeSequence } from '../activities/entities/activity-code-sequence.entity';
+import { Activity } from '../activities/entities/activity.entity';
+import {
+  ActivityCoUnit, ActivityEvent, ActivityLink, ActivityVersion, Comment, Notification, WorkflowAction,
+} from '../activities/entities/activity-parts.entity';
+import { AddActivities1793800000000 } from './migrations/1793800000000-add-activities';
 import { InitSchema1793495899423 } from './migrations/1793495899423-init-schema';
 import { AddEvents1793500640024 } from './migrations/1793500640024-add-events';
 import { AddEventFacultyView1793501916085 } from './migrations/1793501916085-add-event-faculty-view';
@@ -29,10 +37,12 @@ import { AddAppeals1793700000000 } from './migrations/1793700000000-add-appeals'
 export const ENTITIES = [
   Unit, AdminUser, RefreshToken, SystemSetting, AuditLog, Event, EventQrToken, EventFacultyView,
   Device, Student, StudentDevice, Attendance, AttendanceFlag, AttendanceEdit, AttendanceJob, EventCounter, EventCodeFailure, Appeal,
+  AcademicYear, ActivityCategory, ActivityCodeSequence, Activity, ActivityLink, ActivityCoUnit, ActivityEvent, ActivityVersion,
+  WorkflowAction, Comment, Notification,
 ];
 export const MIGRATIONS = [
   InitSchema1793495899423, AddEvents1793500640024, AddEventFacultyView1793501916085, EventFacultyViewMode1793502499621,
-  AddAttendance1793600000000, AddAppeals1793700000000,
+  AddAttendance1793600000000, AddAppeals1793700000000, AddActivities1793800000000,
 ];
 
 export function buildDbOptions(env: AppEnv): DataSourceOptions {

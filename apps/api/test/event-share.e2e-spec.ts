@@ -318,10 +318,12 @@ describe('Chia se su kien cap truong cho cac khoa xem', () => {
 
   describe('migration chuyen co cu sang che do moi', () => {
     // dua DB ve migration 3 (cot faculty_view_enabled), chen du lieu cu bang SQL tho, roi chay lai migration 4.
-    // Migration diem danh (giai doan 3) va khieu nai (giai doan 4) nam sau migration 4 nen phai lui qua truoc (chua co du lieu).
+    // Cac migration ra sau migration 4 (diem danh, khieu nai, hoat dong, ...) phai lui qua truoc (chua co du lieu).
+    // Lui cho den khi migration moi nhat la event-faculty-view-mode, roi lui them chinh no - khong dem cung de
+    // migration ve sau khong lam hong test nay.
+    const latest = async (): Promise<string> => (await ds.query('SELECT name FROM migrations ORDER BY id DESC LIMIT 1'))[0].name;
     const undoTwo = async () => {
-      await ds.undoLastMigration(); // add-appeals
-      await ds.undoLastMigration(); // add-attendance
+      for (let i = 0; i < 20 && !(await latest()).startsWith('EventFacultyViewMode'); i++) await ds.undoLastMigration();
       await ds.undoLastMigration(); // event-faculty-view-mode
     };
     const insertOld = (id: string, enabled: number) =>
