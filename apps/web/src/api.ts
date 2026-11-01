@@ -19,9 +19,12 @@ export interface Page<T> {
 
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CHECKIN_OPEN' | 'CHECKIN_CLOSED' | 'REVIEWING' | 'FINALIZED' | 'CANCELLED';
 
+export type FacultyViewMode = 'NONE' | 'ALL' | 'SELECTED';
+export type CheckinState = 'NOT_AVAILABLE' | 'NOT_YET' | 'OPEN' | 'CLOSED';
+
 export interface EventItem {
   id: string;
-  unit: { id: string; name: string; code: string } | null;
+  unit: { id: string; name: string; code: string; type: 'SCHOOL' | 'FACULTY' } | null;
   title: string;
   description: string | null;
   locationName: string | null;
@@ -36,10 +39,16 @@ export interface EventItem {
   drlPoints: number | null;
   controlLevel: 'NORMAL' | 'TIGHT';
   requireCheckout: boolean;
+  graceMinutes: number;
   hasVerifyCode: boolean;
+  facultyViewMode: FacultyViewMode;
+  // cac khoa duoc chon (che do SELECTED); null khi dang o danh sach hoac khong co quyen xem
+  facultyViewUnitIds: string[] | null;
   canManage: boolean;
   status: EventStatus;
-  checkinState: string;
+  checkinState: CheckinState;
+  cancelReason: string | null;
+  archivedAt: string | null;
 }
 
 export interface Unit {

@@ -184,7 +184,8 @@ export class EventListQuery extends PaginationQuery {
 
 export interface EventDto {
   id: string;
-  unit: { id: string; name: string; code: string } | null;
+  // type: de giao dien biet day la su kien cap truong (SCHOOL) hay cap khoa (FACULTY)
+  unit: { id: string; name: string; code: string; type: 'SCHOOL' | 'FACULTY' } | null;
   title: string;
   description: string | null;
   locationName: string | null;
@@ -221,7 +222,7 @@ export function toEventDto(
 ): EventDto {
   return {
     id: e.id,
-    unit: e.unit ? { id: e.unit.id, name: e.unit.name, code: e.unit.code } : null,
+    unit: e.unit ? { id: e.unit.id, name: e.unit.name, code: e.unit.code, type: e.unit.type } : null,
     title: e.title,
     description: e.description,
     locationName: e.locationName,

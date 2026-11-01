@@ -1,5 +1,8 @@
 // Nhap toa do + ban kinh diem danh: nhap tay hoac lay vi tri hien tai cua may dang dung. Dac ta 3.1
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+
+// Leaflet nang: chi tai khi form co o vi tri (man quan tri)
+const MapPicker = lazy(() => import('./MapPicker').then((m) => ({ default: m.MapPicker })));
 
 export interface Geo {
   latitude: string;
@@ -55,6 +58,15 @@ export function GeoFields({ value, onChange }: { value: Geo; onChange: (g: Geo) 
         <span>Bán kính cho phép (mét, 10–5000)</span>
         <input type="number" min={10} max={5000} step={1} value={value.radiusM} onChange={(e) => set('radiusM', e.target.value)} />
       </label>
+      <Suspense fallback={<p className="sub">Đang tải bản đồ…</p>}>
+        <MapPicker
+          latitude={value.latitude.trim() === '' ? null : Number(value.latitude)}
+          longitude={value.longitude.trim() === '' ? null : Number(value.longitude)}
+          radiusM={value.radiusM.trim() === '' ? null : Number(value.radiusM)}
+          onPick={(lat, lng) => onChange({ latitude: String(lat), longitude: String(lng), radiusM: value.radiusM || '100' })}
+        />
+      </Suspense>
+      <p className="sub" style={{ margin: '8px 0 12px' }}>Bấm lên bản đồ hoặc kéo đầu ghim để chọn vị trí; vòng tròn xanh là vùng cho phép.</p>
       <div className="row">
         <button type="button" className="btn" onClick={useMyLocation}>Lấy vị trí hiện tại của tôi</button>
         {hasPoint && (

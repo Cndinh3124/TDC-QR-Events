@@ -39,6 +39,9 @@ jobs:
       - run: npm run -w apps/api typecheck
       - run: npm run -w apps/api test
       - run: npm run -w apps/api build
+      - run: npm run -w apps/web typecheck
+      - run: npm run -w apps/web test
+      - run: npm run -w apps/web build
 
   security:
     runs-on: ubuntu-latest

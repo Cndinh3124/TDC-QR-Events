@@ -1,7 +1,7 @@
 // Trang diem danh cong khai cho sinh vien (mobile-first) - dac ta 3.3, chot-giao-dien.md muc 1
 // Luong: quet QR -> form -> xac nhan -> (xin GPS neu su kien co toa do) -> ve. Diem danh ra: nut + ma 4 so neu muc Chat.
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { fmt } from '../format';
 import {
   AppealType, checkin, checkout, editTicket, Faculty, getPosition, loadFaculties, loadToken, myAppeals, MyAppeal, Position, PublicError,
@@ -34,6 +34,10 @@ export function CheckinPage() {
   return (
     <div className="pub">
       <header className="pub-head">
+        <div className="pub-logos">
+          <img src="/brand/logo-doan.png" alt="Đoàn TNCS Hồ Chí Minh" />
+          <img src="/brand/logo-hoi.png" alt="Hội Sinh viên Việt Nam" />
+        </div>
         <div>Đoàn Thanh niên · Hội Sinh viên</div>
         <b>Điểm danh sự kiện</b>
       </header>
@@ -235,6 +239,7 @@ function TicketView(p: { ticket: Ticket; info: TokenInfo; faculties: Faculty[]; 
         <div className="notice">Sự kiện này yêu cầu điểm danh ra. Cuối buổi hãy quét mã QR điểm danh ra.</div>
       )}
       {canEdit && <button className="btn pub-btn" onClick={() => setEditing(true)}>Sửa thông tin ({t.editsLeft} lần)</button>}
+      <p style={{ margin: '14px 0 0', textAlign: 'center' }}><Link to="/tra-cuu">Xem lịch sử điểm danh trên máy này</Link></p>
     </section>
   );
 }
