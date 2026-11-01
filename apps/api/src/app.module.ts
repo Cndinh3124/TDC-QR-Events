@@ -19,6 +19,7 @@ import { SettingsModule } from './settings/settings.module';
 import { StudentsModule } from './students/students.module';
 import { UnitsModule } from './units/units.module';
 import { UsersModule } from './users/users.module';
+import { RetentionModule } from './retention/retention.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     }),
     CommonModule,
     AuditModule,
+    RetentionModule,
     AuthModule,
     UnitsModule,
     UsersModule,
