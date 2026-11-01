@@ -1,0 +1,66 @@
+# CI cho moi PR - dac ta 8.8: lint, typecheck, test, build, audit, quet bi mat, quet image
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read # quyen toi thieu
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: tdc_qr_test
+          MYSQL_USER: tdc_app
+          MYSQL_PASSWORD: ci_only_password_123
+          MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_USER: tdc_app
+      TEST_DB_PASSWORD: ci_only_password_123
+      TEST_DB_NAME: tdc_qr_test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run -w apps/api lint
+      - run: npm run -w apps/api typecheck
+      - run: npm run -w apps/api test
+      - run: npm run -w apps/api build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # gitleaks quet ca lich su
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - run: npm ci
+      # chi chan loi nghiem trong o thu vien chay that
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Quet bi mat (gitleaks)
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 detect --source /repo --no-banner --redact
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: docker build -f apps/api/Dockerfile -t tdc-qr-api:ci .
+      - name: Quet lo hong image (trivy)
+        run: >
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:0.76.1 image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tdc-qr-api:ci

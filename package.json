@@ -1,0 +1,16 @@
+{
+  "name": "tdc-qr-events",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "api": "npm run -w apps/api",
+    "lint": "npm run -w apps/api lint",
+    "test": "npm run -w apps/api test",
+    "build": "npm run -w apps/api build"
+  },
+  "overrides": {
+    "multer": "2.5.0"
+  }
+}

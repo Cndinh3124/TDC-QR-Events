@@ -1,0 +1,39 @@
+# Chay thu toan bo backend o may dev:  cp .env.example .env  (dien gia tri) && docker compose up --build
+# Production dung RDS + ALB (giai doan 6), khong dung file nay.
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-tdc_qr}
+      MYSQL_USER: ${DB_USER:-tdc_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Can dat DB_PASSWORD trong .env}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes: [dbdata:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # [BM] khong mo cong DB ra ngoai
+    expose: ["3306"]
+
+  migrate:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    command: ["node", "dist/database/run-migrations.js"]
+    env_file: .env
+    environment: { DB_HOST: db }
+    depends_on: { db: { condition: service_healthy } }
+    restart: "no"
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    env_file: .env
+    environment: { DB_HOST: db, TRUST_PROXY: "true" }
+    ports: ["127.0.0.1:3000:3000"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: { migrate: { condition: service_completed_successfully } }
+
+volumes:
+  dbdata:

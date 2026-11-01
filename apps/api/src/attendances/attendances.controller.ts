@@ -1,0 +1,79 @@
+// /api/admin: duyet luot diem danh, chot su kien - quyen va pham vi kiem tra o service
+import { Body, Controller, Get, Header, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { CurrentUser as CurrentUserType } from '../common/current-user';
+import { CurrentUser, Roles } from '../common/decorators';
+import { ReasonDto } from '../common/dto/reason.dto';
+import { AttendancesService } from './attendances.service';
+import {
+  AttendanceListQuery, BulkDto, EditAttendanceAdminDto, ManualAttendanceDto, ReviewDto,
+} from './dto/attendance.dto';
+import { ReviewService } from './review.service';
+
+// ma xac nhan va thong tin sinh vien: khong cho trinh duyet / proxy luu lai
+const NO_STORE = 'no-store';
+
+@Controller('admin')
+export class AttendancesController {
+  constructor(private readonly attendances: AttendancesService, private readonly review: ReviewService) {}
+
+  @Header('Cache-Control', NO_STORE)
+  @Get('events/:id/attendances')
+  list(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Query() q: AttendanceListQuery) {
+    return this.attendances.list(u, id, q);
+  }
+
+  @Header('Cache-Control', NO_STORE)
+  @Get('events/:id/attendances/summary')
+  summary(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string) {
+    return this.attendances.summary(u, id);
+  }
+
+  @Post('events/:id/attendances')
+  createManual(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ManualAttendanceDto) {
+    return this.attendances.createManual(u, id, dto);
+  }
+
+  @Post('attendances/bulk') @HttpCode(200)
+  bulk(@CurrentUser() u: CurrentUserType, @Body() dto: BulkDto) {
+    return this.attendances.bulk(u, dto);
+  }
+
+  @Patch('attendances/:id')
+  edit(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: EditAttendanceAdminDto) {
+    return this.attendances.editOne(u, id, dto);
+  }
+
+  @Patch('attendances/:id/review')
+  reviewOne(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReviewDto) {
+    return this.attendances.reviewOne(u, id, dto);
+  }
+
+  @Post('attendances/:id/void') @HttpCode(200)
+  void(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReasonDto) {
+    return this.attendances.setVoided(u, id, dto.reason, true);
+  }
+
+  @Post('attendances/:id/restore') @HttpCode(200)
+  restore(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReasonDto) {
+    return this.attendances.setVoided(u, id, dto.reason, false);
+  }
+
+  // ---- giai doan duyet cua su kien ----
+
+  @Post('events/:id/review/start') @HttpCode(200)
+  startReview(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string) {
+    return this.review.startReview(u, id);
+  }
+
+  @Post('events/:id/finalize') @HttpCode(200)
+  finalize(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string) {
+    return this.review.finalize(u, id);
+  }
+
+  // [NV] 3.6: chi Doan truong mo khoa su kien da chot, bat buoc co ly do
+  @Roles('SCHOOL_ADMIN')
+  @Post('events/:id/unlock') @HttpCode(200)
+  unlock(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ReasonDto) {
+    return this.review.unlock(u, id, dto.reason);
+  }
+}
