@@ -79,3 +79,37 @@ export function delta(value: number, previous: number): { text: string; tone: 'u
 export const vnDay = (ms: number) => new Date(ms + 7 * 3600_000).toISOString().slice(0, 10);
 
 export const dmy = (day: string) => day.split('-').reverse().join('/');
+
+// ---------- hoat dong (giai doan 6) ----------
+export const ACTIVITY_STATUS: Record<string, [string, string]> = {
+  DRAFT: ['Nháp', 'draft'],
+  PENDING_PLAN: ['Chờ duyệt kế hoạch', 'wait'],
+  IN_PROGRESS: ['Đang triển khai', 'info'],
+  PENDING_EVAL: ['Chờ đánh giá', 'wait'],
+  EVALUATED: ['Đã đánh giá', 'ok'],
+  LOCKED: ['Đã chốt', 'ok'],
+};
+export const ACTIVITY_STEPS = ['DRAFT', 'PENDING_PLAN', 'IN_PROGRESS', 'PENDING_EVAL', 'EVALUATED', 'LOCKED'] as const;
+export const EVALUATION_LABEL: Record<string, [string, string]> = { COMPLETED: ['Hoàn thành', 'ok'], NOT_COMPLETED: ['Chưa hoàn thành', 'err'] };
+export const REWARD_LABEL: Record<string, [string, string]> = { APPROVED: ['Được khen thưởng', 'ok'], REJECTED: ['Không khen thưởng', 'draft'] };
+export const LINK_GROUP_LABEL: Record<string, string> = { MEDIA: 'Sản phẩm truyền thông', PUBLICATION: 'Bài đăng / tin bài', RESULT: 'Báo cáo kết quả' };
+export const LINK_TYPE_LABEL: Record<string, string> = { FACEBOOK: 'Facebook', VIDEO: 'Video', PHOTO: 'Hình ảnh', INFOGRAPHIC: 'Infographic', NEWS: 'Tin bài', OTHER: 'Khác' };
+export const LEVEL_LABEL: Record<string, string> = { SCHOOL: 'Cấp trường', FACULTY: 'Cấp khoa', CLASS: 'Cấp lớp' };
+export const MODE_LABEL: Record<string, string> = { ONSITE: 'Trực tiếp', ONLINE: 'Trực tuyến', HYBRID: 'Kết hợp' };
+export const WORKFLOW_LABEL: Record<string, string> = {
+  SUBMIT: 'Nộp kế hoạch', APPROVE: 'Duyệt kế hoạch', RETURN: 'Trả lại bổ sung', SUBMIT_RESULT: 'Nộp kết quả',
+  EVALUATE: 'Đánh giá', REWARD: 'Xét khen thưởng', REOPEN: 'Mở lại hồ sơ',
+};
+export const FIELD_LABEL: Record<string, string> = {
+  name: 'Tên hoạt động', startAt: 'Bắt đầu', endAt: 'Kết thúc', location: 'Địa điểm', mode: 'Hình thức', level: 'Cấp tổ chức',
+  targetAudience: 'Đối tượng', expectedCount: 'Dự kiến', manualCount: 'Thực tế (nhập tay)', budgetPlanned: 'Kinh phí dự kiến',
+  budgetActual: 'Kinh phí thực tế', ownerName: 'Người phụ trách', ownerPhone: 'SĐT phụ trách', planUrl: 'Link kế hoạch', note: 'Ghi chú',
+  categoryId: 'Lĩnh vực', links: 'Link sản phẩm', coUnitIds: 'Đơn vị phối hợp', academicYearId: 'Năm học',
+};
+
+export function ActivityBadge({ status }: { status: string }) {
+  const [label, tone] = ACTIVITY_STATUS[status] ?? [status, 'draft'];
+  return <span className={`badge ${tone}`}>{label}</span>;
+}
+
+export const vnd = (n: number | null) => (n === null ? '—' : `${n.toLocaleString('vi-VN')} đ`);

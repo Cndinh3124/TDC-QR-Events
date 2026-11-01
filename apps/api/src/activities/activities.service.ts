@@ -92,8 +92,8 @@ export class ActivitiesService {
     const names = await this.nameMap(actorIds);
     const items = [
       ...flows.map((f) => ({ kind: 'WORKFLOW' as const, at: f.createdAt, actor: names.get(f.actorId) ?? null, action: f.action, note: f.note, version: null as number | null, diff: null })),
-      // ban tao moi khong co diff; chi cac lan sua co diff moi dang ke
-      ...versions.filter((v) => v.diffJson && Object.keys(v.diffJson).length > 0)
+      // chi cac lan sua tay (UPDATE) co diff moi dang ke; buoc quy trinh da co dong WORKFLOW rieng nen khong lap lai
+      ...versions.filter((v) => v.action === 'UPDATE' && v.diffJson && Object.keys(v.diffJson).length > 0)
         .map((v) => ({ kind: 'VERSION' as const, at: v.changedAt, actor: names.get(v.changedBy) ?? null, action: v.action, note: null, version: v.version, diff: v.diffJson })),
     ].sort((x, y) => x.at.getTime() - y.at.getTime());
     return { items };
