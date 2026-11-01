@@ -235,3 +235,27 @@ tr:last-child td { border-bottom: 0; }
 .history { list-style: none; margin: 0; padding: 0; }
 .history li { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--divider); }
 .history li:last-child { border-bottom: 0; }
+
+/* ---- hoat dong (giai doan 6) ---- */
+.stepper { list-style: none; display: flex; gap: 0; margin: 0 0 20px; padding: 0; flex-wrap: wrap; }
+.stepper li { flex: 1; min-width: 120px; text-align: center; font-size: 13px; font-weight: 600; color: var(--faint); padding: 8px 6px; border-bottom: 4px solid var(--border); }
+.stepper li.done { color: var(--ok-fg, #1b6b3a); border-bottom-color: var(--ok-fg, #1b6b3a); }
+.stepper li.now { color: var(--primary); border-bottom-color: var(--primary); }
+.kv { display: grid; grid-template-columns: 150px 1fr; gap: 8px 14px; margin: 0; }
+.kv dt { color: var(--muted); font-size: 14px; }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+ul.plain { list-style: none; margin: 6px 0 0; padding: 0; }
+ul.plain li { margin-bottom: 6px; overflow-wrap: anywhere; }
+.linkgroup { border: 1px solid var(--border); border-radius: 12px; margin: 0 0 14px; padding: 10px 14px 14px; }
+.linkgroup legend { font-weight: 600; padding: 0 6px; }
+.linkrow { margin-bottom: 8px; flex-wrap: wrap; }
+.bell { position: relative; text-decoration: none; font-size: 18px; margin-right: 10px; }
+.bell .nav-badge { margin-left: 2px; vertical-align: top; }
+ul.notif { list-style: none; margin: 0; padding: 0; }
+ul.notif li { border-bottom: 1px solid var(--border); }
+ul.notif li:last-child { border-bottom: 0; }
+ul.notif button { display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left; background: none; border: 0; padding: 12px 4px; font: inherit; cursor: pointer; color: var(--text); }
+ul.notif li.unread button span { font-weight: 700; }
+ul.notif small { color: var(--faint); white-space: nowrap; }
+@media (max-width: 900px) { .kv { grid-template-columns: 1fr; gap: 2px; } .kv dd { margin-bottom: 8px; } }
+td .mono, td.mono { white-space: nowrap; }

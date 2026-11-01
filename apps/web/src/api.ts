@@ -318,3 +318,119 @@ export interface AuditItem {
   ip: string | null;
   createdAt: string;
 }
+
+// ---------- giai doan 6: quan ly hoat dong ----------
+
+export type ActivityStatus = 'DRAFT' | 'PENDING_PLAN' | 'IN_PROGRESS' | 'PENDING_EVAL' | 'EVALUATED' | 'LOCKED';
+export type Evaluation = 'COMPLETED' | 'NOT_COMPLETED';
+export type Reward = 'APPROVED' | 'REJECTED';
+export type LinkGroup = 'MEDIA' | 'PUBLICATION' | 'RESULT';
+export type LinkType = 'FACEBOOK' | 'VIDEO' | 'PHOTO' | 'INFOGRAPHIC' | 'NEWS' | 'OTHER';
+
+export interface ActivityLink {
+  id: string;
+  group: LinkGroup;
+  type: LinkType;
+  url: string;
+  publishedOn: string | null;
+  needsReview: boolean;
+}
+
+export interface Activity {
+  id: string;
+  code: string;
+  academicYear: { id: string; name: string } | null;
+  unit: { id: string; name: string; code: string } | null;
+  category: { id: string; name: string } | null;
+  level: 'SCHOOL' | 'FACULTY' | 'CLASS';
+  name: string;
+  startAt: string;
+  endAt: string;
+  location: string | null;
+  mode: 'ONSITE' | 'ONLINE' | 'HYBRID';
+  targetAudience: string | null;
+  expectedCount: number | null;
+  actualCount: number | null;
+  actualSource: 'ATTENDANCE' | 'MANUAL' | null;
+  manualCount: number | null;
+  budgetPlanned: number | null;
+  budgetActual: number | null;
+  ownerName: string | null;
+  ownerPhone: string | null;
+  planUrl: string | null;
+  note: string | null;
+  status: ActivityStatus;
+  returnNote: string | null;
+  returnedAt: string | null;
+  submittedAt: string | null;
+  evaluation: Evaluation | null;
+  evaluationNote: string | null;
+  evaluatedAt: string | null;
+  reward: Reward | null;
+  rewardNote: string | null;
+  lockedAt: string | null;
+  counts: { media: number; publication: number; result: number };
+  coUnits: Array<{ id: string; name: string }>;
+  links?: ActivityLink[];
+  events?: Array<{ id: string; title: string; startAt: string; attendanceCount: number }>;
+  canEdit: boolean;
+  canSubmit: boolean;
+  canReview: boolean;
+}
+
+export interface AcademicYear {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  planDeadline: string | null;
+  reportDeadline: string | null;
+  locked: boolean;
+  lockedAt: string | null;
+}
+
+export interface ActivityCategory {
+  id: string;
+  name: string;
+  position: number;
+  isActive: boolean;
+}
+
+export interface TimelineItem {
+  kind: 'WORKFLOW' | 'VERSION';
+  at: string;
+  actor: string | null;
+  action: string;
+  note: string | null;
+  version: number | null;
+  diff: Record<string, { from: unknown; to: unknown }> | null;
+}
+
+export interface ChecklistCriterion {
+  key: string;
+  label: string;
+  auto: boolean;
+  passed: boolean | null;
+}
+
+export interface ActivityComment {
+  id: string;
+  author: string | null;
+  content: string;
+  createdAt: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  message: string;
+  entityType: string | null;
+  entityId: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface BulkResult {
+  done: string[];
+  failed: Array<{ id: string; message: string }>;
+}

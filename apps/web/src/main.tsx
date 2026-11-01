@@ -17,6 +17,11 @@ const Lookup = lazy(() => import('./pages/Lookup').then((m) => ({ default: m.Loo
 const RequireAuth = lazy(() => import('./pages/Layout').then((m) => ({ default: m.RequireAuth })));
 const Present = lazy(() => import('./pages/Present').then((m) => ({ default: m.Present })));
 const RequireAdmin = lazy(() => import('./pages/Layout').then((m) => ({ default: m.RequireAdmin })));
+const Activities = lazy(() => import('./pages/Activities').then((m) => ({ default: m.Activities })));
+const ActivityConfig = lazy(() => import('./pages/ActivityConfig').then((m) => ({ default: m.ActivityConfig })));
+const ActivityDetail = lazy(() => import('./pages/ActivityDetail').then((m) => ({ default: m.ActivityDetail })));
+const ActivityForm = lazy(() => import('./pages/ActivityForm').then((m) => ({ default: m.ActivityForm })));
+const Notifications = lazy(() => import('./pages/Notifications').then((m) => ({ default: m.Notifications })));
 const Appeals = lazy(() => import('./pages/Appeals').then((m) => ({ default: m.Appeals })));
 const AuditLog = lazy(() => import('./pages/AuditLog').then((m) => ({ default: m.AuditLog })));
 const ChangePassword = lazy(() => import('./pages/ChangePassword').then((m) => ({ default: m.ChangePassword })));
@@ -52,6 +57,11 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/su-kien/:id" element={<EventDetail />} />
             <Route path="/su-kien/:id/sua" element={<EventForm />} />
             <Route path="/su-kien/:id/duyet" element={<Review />} />
+            <Route path="/hoat-dong" element={<Activities />} />
+            <Route path="/hoat-dong/moi" element={<ActivityForm />} />
+            <Route path="/hoat-dong/:id" element={<ActivityDetail />} />
+            <Route path="/hoat-dong/:id/sua" element={<ActivityForm />} />
+            <Route path="/thong-bao" element={<Notifications />} />
             <Route path="/khieu-nai" element={<Appeals />} />
             <Route path="/sinh-vien" element={<Students />} />
             <Route path="/bao-cao" element={<Reports />} />
@@ -59,6 +69,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/tai-khoan" element={<Users />} />
               <Route path="/don-vi" element={<Units />} />
               <Route path="/cau-hinh" element={<Settings />} />
+              <Route path="/nam-hoc" element={<ActivityConfig />} />
               <Route path="/nhat-ky" element={<AuditLog />} />
             </Route>
           </Route>
