@@ -4,6 +4,15 @@ updates:
     directory: /
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
+    # cac goi @nestjs/* phai cung dong phien ban (core, common, platform-express, typeorm...):
+    # gom vao mot PR de CI bat duoc lech ban; nang ban lon (major) lam tay sau khi thu day du
+    groups:
+      nestjs:
+        patterns: ["@nestjs/*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "@nestjs/*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }
