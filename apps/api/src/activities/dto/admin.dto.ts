@@ -1,6 +1,6 @@
 // DTO nam hoc, linh vuc, thong bao - dac ta quan-ly-hoat-dong 2, 3.1, 4.3
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, Length, Matches, Max, Min } from 'class-validator';
 import { PaginationQuery } from '../../common/dto/pagination.dto';
 import { emptyToNull, line } from '../../common/dto/transforms';
 
@@ -42,4 +42,9 @@ export class UpdateCategoryDto {
 
 export class NotificationQuery extends PaginationQuery {
   @IsOptional() @Transform(({ value }) => value === 'true' || value === true) @IsBoolean() unread?: boolean;
+}
+
+export class ActivityStatsQuery {
+  @IsOptional() @IsUUID() academicYearId?: string;
+  @IsOptional() @IsUUID() unitId?: string;
 }
