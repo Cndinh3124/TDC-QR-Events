@@ -1,0 +1,12 @@
+# Cau hinh gitleaks: dung bo luat mac dinh, chi bo qua khoa GIA trong thu muc test.
+# [BM] KHONG mo rong ngoai le nay ra ngoai apps/api/test/ - ma that van bi quet day du.
+title = "TDC-QR-Events"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Khoa gia (JWT/DEVICE secret, idempotency key) dung cho test e2e va test kiem tra bien moi truong"
+paths = [
+  '''^apps/api/test/.*\.ts$''',
+]
