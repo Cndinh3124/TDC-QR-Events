@@ -3,11 +3,21 @@ import { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { api, Reminders } from '../api';
 import { useAuth } from '../auth';
+import { LogoTrio } from '../components/Brand';
 
 // Man chi Doan truong: API da chan 403, day chi de khong hien man trong (dac ta 8.2)
 export function RequireAdmin() {
   const { user } = useAuth();
   return user?.role === 'SCHOOL_ADMIN' ? <Outlet /> : <div className="error">Chỉ quản trị Đoàn trường mới dùng được mục này.</div>;
+}
+
+// Man khong co khung quan tri (vd. trinh chieu toan man hinh) nhung van bat buoc dang nhap
+export function RequireAuth() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="content">Đang tải…</div>;
+  if (!user) return <Navigate to="/dang-nhap" replace />;
+  if (user.mustChangePassword) return <Navigate to="/doi-mat-khau" replace />;
+  return <Outlet />;
 }
 
 export function Layout() {
@@ -29,7 +39,7 @@ export function Layout() {
   return (
     <div className="shell">
       <nav className="side">
-        <div className="brand">TDC-QR-Events</div>
+        <div className="brand"><LogoTrio size={30} /><span>Đoàn – Hội TDC</span></div>
         <NavLink to="/tong-quan">Tổng quan{due > 0 && <span className="nav-badge" title="Việc cần xử lý">{due}</span>}</NavLink>
         <div className="group">Hoạt động</div>
         <NavLink to="/su-kien">Sự kiện</NavLink>

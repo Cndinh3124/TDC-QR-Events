@@ -13,6 +13,9 @@ import { CheckinPage } from './pages/CheckinPage';
 
 // [NV] 11: trang diem danh cong khai tai nhe - ma quan tri tach rieng, chi tai khi vao khu quan tri
 const Layout = lazy(() => import('./pages/Layout').then((m) => ({ default: m.Layout })));
+const Lookup = lazy(() => import('./pages/Lookup').then((m) => ({ default: m.Lookup })));
+const RequireAuth = lazy(() => import('./pages/Layout').then((m) => ({ default: m.RequireAuth })));
+const Present = lazy(() => import('./pages/Present').then((m) => ({ default: m.Present })));
 const RequireAdmin = lazy(() => import('./pages/Layout').then((m) => ({ default: m.RequireAdmin })));
 const Appeals = lazy(() => import('./pages/Appeals').then((m) => ({ default: m.Appeals })));
 const AuditLog = lazy(() => import('./pages/AuditLog').then((m) => ({ default: m.AuditLog })));
@@ -37,12 +40,17 @@ createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/dang-nhap" element={<Login />} />
           <Route path="/diem-danh/:token" element={<CheckinPage />} />
+          <Route path="/tra-cuu" element={<Lookup />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/trinh-chieu/:id" element={<Present />} />
+          </Route>
           <Route element={<Layout />}>
             <Route path="/doi-mat-khau" element={<ChangePassword />} />
             <Route path="/tong-quan" element={<Dashboard />} />
             <Route path="/su-kien" element={<Events />} />
             <Route path="/su-kien/moi" element={<EventForm />} />
             <Route path="/su-kien/:id" element={<EventDetail />} />
+            <Route path="/su-kien/:id/sua" element={<EventForm />} />
             <Route path="/su-kien/:id/duyet" element={<Review />} />
             <Route path="/khieu-nai" element={<Appeals />} />
             <Route path="/sinh-vien" element={<Students />} />
