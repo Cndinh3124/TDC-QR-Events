@@ -149,3 +149,89 @@ tr:last-child td { border-bottom: 0; }
 .audit-detail { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 13px; white-space: pre-wrap; word-break: break-word; margin: 4px 0 0; max-height: 220px; overflow: auto; }
 .nav-badge { background: #e5484d; color: #fff; border-radius: 10px; font-size: 12px; padding: 0 7px; margin-left: 6px; }
 @media (max-width: 900px) { .cols2 { grid-template-columns: 1fr; } .stats.six { grid-template-columns: 1fr 1fr; } .hbar { grid-template-columns: 110px 1fr 40px; } }
+
+/* logo, ban do */
+.logos { display: inline-flex; align-items: center; gap: 8px; }
+.logos img { height: var(--logo, 40px); width: auto; display: block; }
+.logo-chip { display: inline-flex; align-items: center; justify-content: center; background: #fff; border-radius: 50%; height: var(--logo, 40px); width: var(--logo, 40px); }
+.logo-chip img { height: 78%; width: 78%; object-fit: contain; }
+.map { border: 1px solid var(--border); border-radius: 12px; z-index: 0; }
+.map-pin { background: var(--primary); border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+
+/* bo loc danh sach */
+.filters { display: flex; flex-wrap: wrap; gap: 0 14px; margin-bottom: 8px; }
+.filters .field { min-width: 160px; flex: 1 1 160px; max-width: 260px; margin-bottom: 8px; }
+
+/* khung nang cao trong form, goi y duoi o nhap */
+.adv { border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; }
+.adv summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+.adv[open] summary { margin-bottom: 8px; }
+.hint { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+/* chon che do chia se, danh sach khoa, the thao tac phu */
+.radio { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; cursor: pointer; }
+.radio input { margin-top: 5px; }
+.faculty-list { border: 1px solid var(--border); border-radius: 12px; padding: 8px 16px 2px; margin: 0 0 14px 24px; columns: 2; }
+.faculty-list legend { font-size: 14px; color: var(--muted); padding: 0 6px; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 0 20px; flex-wrap: wrap; }
+.tabs button { border: 0; background: none; font: 600 15px 'Open Sans', sans-serif; color: var(--muted); padding: 10px 16px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tabs button.on { color: var(--primary); border-bottom-color: var(--primary); }
+.menu { position: relative; }
+.menu summary { list-style: none; cursor: pointer; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu .menu-list { position: absolute; right: 0; top: calc(100% + 6px); background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 6px; min-width: 200px; z-index: 5; box-shadow: 0 6px 20px rgba(11, 58, 134, 0.12); display: flex; flex-direction: column; }
+.menu .menu-list button { text-align: left; border: 0; background: none; font: 500 15px 'Open Sans', sans-serif; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: var(--text); }
+.menu .menu-list button:hover { background: var(--bg); }
+.menu .menu-list button.danger { color: var(--err-fg); }
+
+/* trinh chieu QR toan man hinh - chu to de doc tren man chieu */
+.present { position: fixed; inset: 0; display: grid; grid-template-columns: 1fr 1fr; background: var(--navy); color: #fff; }
+.p-left { padding: 4vmin 5vmin; display: flex; flex-direction: column; justify-content: space-between; gap: 3vmin; }
+.p-tag { font: 700 clamp(18px, 2.2vmin, 28px) Roboto, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #8db6f2; margin-bottom: 1.5vmin; }
+.p-left h1 { font-size: clamp(48px, 7vmin, 96px); line-height: 1.1; margin: 0 0 2vmin; }
+.p-meta { font-size: clamp(18px, 2.6vmin, 32px); color: #c9d7ef; margin: 0; }
+.p-steps { font-size: clamp(18px, 2.6vmin, 32px); line-height: 1.5; padding-left: 1.4em; margin: 0; color: #e4ecf8; }
+.p-steps li { margin-bottom: 1vmin; }
+.p-right { background: #fff; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.5vmin; padding: 3vmin; }
+.p-qr { width: min(62vmin, 100%); height: auto; aspect-ratio: 1; image-rendering: pixelated; }
+.p-url { font-size: clamp(14px, 1.8vmin, 22px); color: var(--muted); word-break: break-all; text-align: center; margin: 0; }
+.p-code { font: 700 min(24vmin, 22vw) 'JetBrains Mono', monospace; letter-spacing: 0.12em; color: var(--navy); }
+.p-stats { display: flex; gap: 4vmin; }
+.p-stats > div { text-align: center; min-width: 14vmin; }
+.p-stats b { display: block; font: 700 clamp(36px, 6.5vmin, 80px)/1.1 'Open Sans', sans-serif; color: var(--navy); font-variant-numeric: tabular-nums; }
+.p-stats .p-timer { font-family: 'JetBrains Mono', monospace; }
+.p-stats span { font-size: clamp(14px, 2vmin, 24px); color: var(--muted); }
+.p-bar { position: fixed; left: 50%; bottom: 3vmin; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; background: rgba(255, 255, 255, 0.96); border-radius: 14px; padding: 10px 14px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); transition: opacity 0.3s; }
+.p-bar.hidden { opacity: 0; pointer-events: none; }
+.present-empty { max-width: 560px; margin: 12vh auto; padding: 0 20px; }
+@media (max-width: 800px) { .present { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow: auto; } .p-qr { width: min(80vw, 60vh); } }
+
+/* dang nhap chia doi */
+.login-split { min-height: 100vh; display: grid; grid-template-columns: 1.1fr 1fr; }
+.login-art { background: var(--navy); color: #fff; padding: 48px 56px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
+.login-brand { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.login-brand div b { display: block; font: 700 18px/1.3 Roboto, sans-serif; letter-spacing: 0.02em; }
+.login-brand div span { display: block; color: #8db6f2; font-weight: 600; font-size: 16px; margin-top: 2px; }
+.login-slogan .kicker { font: 600 16px Roboto, sans-serif; letter-spacing: 0.04em; color: #8db6f2; }
+.login-slogan h2 { font-size: 50px; line-height: 1.12; margin: 18px 0 0; font-weight: 700; }
+.login-slogan p { margin: 22px 0 0; max-width: 520px; font-size: 18px; line-height: 1.55; color: #c9d7ef; }
+.login-values { border-top: 1px solid rgba(255, 255, 255, 0.25); padding-top: 18px; font: 600 15px Roboto, sans-serif; letter-spacing: 0.1em; color: #8db6f2; }
+.login-form-side { display: grid; place-items: center; padding: 48px 24px; background: #fff; }
+.login-form { width: 100%; max-width: 380px; }
+.login-form h1 { font-size: 32px; }
+.login-note { font-size: 14px; color: var(--muted); background: var(--bg); border-radius: 12px; padding: 12px 14px; margin-top: 18px; }
+.pw { position: relative; }
+.pw input { padding-right: 64px !important; }
+.pw .link { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 860px) {
+  .login-split { grid-template-columns: 1fr; }
+  .login-art { padding: 24px; gap: 16px; }
+  .login-slogan, .login-values { display: none; }
+}
+.pub-logos { display: flex; gap: 10px; margin-bottom: 10px; }
+.pub-logos img { height: 36px; width: auto; }
+.side .brand .logos { margin-right: 4px; }
+.side .brand span { font-size: 16px; }
+.history { list-style: none; margin: 0; padding: 0; }
+.history li { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--divider); }
+.history li:last-child { border-bottom: 0; }

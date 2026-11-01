@@ -1,5 +1,5 @@
 // Dinh dang thoi gian + nhan trang thai su kien (mau theo chot-giao-dien.md muc 2)
-import type { EventStatus } from './api';
+import type { CheckinState, EventStatus } from './api';
 
 export const fmt = (iso: string) =>
   new Date(iso).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
@@ -14,8 +14,16 @@ const STATUS: Record<EventStatus, [string, string]> = {
   CANCELLED: ['Đã hủy', 'err'],
 };
 
-export function StatusBadge({ status }: { status: EventStatus }) {
-  const [label, tone] = STATUS[status];
+// [NV] 3.1: PUBLISHED = tu dong theo khung gio, nen nhan phai xet checkinState truoc (dang mo / da dong that su)
+export function eventBadge(status: EventStatus, checkinState?: CheckinState, archived = false): [string, string] {
+  if (archived) return ['Lưu trữ', 'draft'];
+  if (status === 'PUBLISHED' && checkinState === 'OPEN') return ['Đang điểm danh', 'ok'];
+  if (status === 'PUBLISHED' && checkinState === 'CLOSED') return ['Đã đóng điểm danh', 'draft'];
+  return STATUS[status];
+}
+
+export function StatusBadge({ status, checkinState, archived }: { status: EventStatus; checkinState?: CheckinState; archived?: boolean }) {
+  const [label, tone] = eventBadge(status, checkinState, archived);
   return <span className={`badge ${tone}`}>{label}</span>;
 }
 
