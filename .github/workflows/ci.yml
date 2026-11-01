@@ -61,7 +61,8 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: .github/scripts/annotate.sh "docker build" docker build -f apps/api/Dockerfile -t tdc-qr-api:ci .
       - name: Quet lo hong image (trivy)
-        run: >
-          .github/scripts/annotate.sh "trivy"
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
-          aquasec/trivy:0.76.1 image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tdc-qr-api:ci
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/out" \
+            aquasec/trivy:0.76.1 image -q --severity HIGH,CRITICAL --ignore-unfixed \
+            --format json --output /out/trivy.json tdc-qr-api:ci
+          node .github/scripts/trivy-summary.mjs trivy.json
