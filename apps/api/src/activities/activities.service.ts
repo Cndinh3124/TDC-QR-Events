@@ -373,7 +373,8 @@ export class ActivitiesService {
   private async nextCode(m: EntityManager, year: number): Promise<string> {
     // [NV] ma hoat dong: mot cau lenh nguyen tu de tranh deadlock khi nhieu nguoi tao cung luc (INSERT IGNORE + UPDATE tach roi gay deadlock)
     await m.query(
-      'INSERT INTO activity_code_sequences (year, last_value) VALUES (?, LAST_INSERT_ID(1)) ON DUPLICATE KEY UPDATE last_value = LAST_INSERT_ID(last_value + 1)',
+      // `last_value` phai dat trong dau backtick: la tu khoa (ham cua so LAST_VALUE) cua MySQL 8, MariaDB thi khong
+      'INSERT INTO activity_code_sequences (`year`, `last_value`) VALUES (?, LAST_INSERT_ID(1)) ON DUPLICATE KEY UPDATE `last_value` = LAST_INSERT_ID(`last_value` + 1)',
       [year],
     );
     const [row] = await m.query('SELECT LAST_INSERT_ID() AS n');
