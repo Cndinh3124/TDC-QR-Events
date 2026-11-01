@@ -13,7 +13,8 @@
 | 3. Điểm danh công khai (mã thiết bị, `/api/public`: xem sự kiện theo QR, điểm danh vào / ra, sửa thông tin, lịch sử; luật chặn ngay, gắn cờ chạy nền, idempotency, giới hạn tần suất) — **chỉ backend** | **Xong** — xem `docs/nhat-ky/giai-doan-3.md` (chưa đo hiệu năng) |
 | 4. Duyệt & ĐRL (danh sách / duyệt / hàng loạt, thêm - sửa - hủy lượt, chốt và cộng ĐRL, mở khóa, khiếu nại 7 ngày, hồ sơ và gộp sinh viên, báo cáo ĐRL + Excel) | **Xong** — xem `docs/nhat-ky/giai-doan-4.md` (cần chạy migration mới) |
 | 5. Dashboard & hoàn thiện (tổng quan + nhắc việc, màn tài khoản / đơn vị / cấu hình / nhật ký, kiểm thử tải k6, test quét phân quyền mọi route) | **Xong** — xem `docs/nhat-ky/giai-doan-5.md` (số đo tải mới chạy trên máy dev) |
-| 6. Triển khai | Chưa làm |
+| 6. Quản lý hoạt động (năm học, lĩnh vực, hồ sơ, quy trình duyệt → đánh giá → khen thưởng, link sản phẩm, gắn buổi điểm danh, thông báo, thống kê + Excel; màn hình web; tự ẩn danh hóa vị trí quá hạn) | **Xong phần lõi** — xem `docs/nhat-ky/giai-doan-6.md` (chưa có lịch tháng, nhập Excel, PDF theo mẫu, báo cáo đơn vị) |
+| 7. Triển khai (nginx, sao lưu / khôi phục, hướng dẫn) | **Xong phần cấu hình** — xem `docs/trien-khai.md` (Docker và MySQL 8.4 thật chưa chạy thử ở đây) |
 
 Giao diện React (`apps/web`, Vite) mới có bản đầu: đăng nhập, đổi mật khẩu, danh sách / tạo sự kiện, chi tiết sự kiện (công bố, mở / đóng điểm danh, số đếm trực tiếp, mã QR). Trang điểm danh cho sinh viên ở `/diem-danh/:token` (form, xác nhận, GPS, vé, sửa thông tin, điểm danh ra). Màn quản trị: duyệt điểm danh, khiếu nại, hồ sơ sinh viên, báo cáo ĐRL. Có tổng quan (nhắc việc), và các màn chỉ Đoàn trường: tài khoản, đơn vị, cấu hình, nhật ký. Thử bằng điện thoại cần https (GPS): chạy tunnel tới cổng 5173 rồi đặt `PUBLIC_BASE_URL` là địa chỉ tunnel. Chạy: bật API rồi `npm run -w apps/web dev` → http://localhost:5173 (Vite chuyển `/api` sang `127.0.0.1:3000`). Bản thiết kế tham chiếu nằm trong canvas "Giao diện TDC-QR-Events".
 
@@ -53,6 +54,8 @@ apps/api/src
   attendances/ duyệt lượt, chốt sự kiện, cộng ĐRL
   appeals/   xử lý khiếu nại   students/ hồ sơ + gộp MSSV   reports/ báo cáo ĐRL + Excel
   public/    điểm danh công khai: mã thiết bị, điểm danh vào / ra, sửa, lịch sử, worker gắn cờ
+  activities/ năm học, lĩnh vực, hồ sơ hoạt động, quy trình duyệt, thống kê, thông báo
+  retention/ tự xóa dữ liệu vị trí quá hạn lưu trữ
   dashboard/ tổng quan + nhắc việc
   settings/  cấu hình hệ thống (mssv_regex, appeal_days, …)
   audit/     nhật ký (chỉ đọc)
@@ -61,4 +64,4 @@ apps/api/src
   cli/       create-admin
 ```
 
-Kiểm thử tải điểm danh (k6): xem `loadtest/README.md`.
+Kiểm thử tải điểm danh (k6): xem `loadtest/README.md`. Triển khai thật: `docs/trien-khai.md` (nginx, sao lưu, danh sách kiểm tra).

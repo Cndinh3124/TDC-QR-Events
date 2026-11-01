@@ -55,7 +55,11 @@ describe('Quan ly hoat dong', () => {
       if (s === 'PENDING_PLAN') await act(cntt, id, 'submit');
       if (s === 'IN_PROGRESS') await act(admin, id, 'approve');
       if (s === 'PENDING_EVAL') {
-        await as(app, cntt).patch(`/api/admin/activities/${id}`).send({ links: [{ group: 'RESULT', url: 'https://docs.google.com/document/d/ketqua' }] }).expect(200);
+        // links thay the ca bo: giu link san co roi them link ket qua
+        const cur = (await as(app, admin).get(`/api/admin/activities/${id}`).expect(200)).body.links as Array<{ group: string; type: string; url: string }>;
+        const keep = cur.map((l) => ({ group: l.group, type: l.type, url: l.url }));
+        if (!keep.some((l) => l.group === 'RESULT')) keep.push({ group: 'RESULT', type: 'OTHER', url: 'https://docs.google.com/document/d/ketqua' });
+        await as(app, cntt).patch(`/api/admin/activities/${id}`).send({ links: keep }).expect(200);
         await act(cntt, id, 'submit-result');
       }
       if (s === 'EVALUATED') await act(admin, id, 'evaluate', { result: 'COMPLETED' });
@@ -305,6 +309,7 @@ describe('Quan ly hoat dong', () => {
       const re = (await act(admin, a.id, 'reopen', { reason: 'Nhap nham diem thuong' })).body;
       expect(re).toMatchObject({ status: 'EVALUATED', reward: null, lockedAt: null, evaluation: 'COMPLETED' });
       const tl = (await as(app, admin).get(`/api/admin/activities/${a.id}/timeline`).expect(200)).body.items;
+      expect(tl.filter((i: { kind: string }) => i.kind === 'VERSION')).toHaveLength(1); // chi lan sua tay (them link ket qua), khong lap lai buoc quy trinh
       expect(tl.filter((i: { kind: string }) => i.kind === 'WORKFLOW').map((i: { action: string }) => i.action)).toEqual(['SUBMIT', 'APPROVE', 'SUBMIT_RESULT', 'EVALUATE', 'REWARD', 'REOPEN']);
       for (const code of ['ACTIVITY_SUBMIT', 'ACTIVITY_APPROVE', 'ACTIVITY_EVALUATE', 'ACTIVITY_REWARD', 'ACTIVITY_REOPEN']) {
         expect((await as(app, admin).get(`/api/admin/audit-logs?action=${code}`).expect(200)).body.total).toBe(1);
@@ -476,6 +481,68 @@ describe('Quan ly hoat dong', () => {
       expect((await as(app, admin).get('/api/admin/notifications').expect(200)).body.total).toBe(1);
       await as(app, cntt).post(`/api/admin/activities/${a.id}/comments`).send({ content: '' }).expect(400);
       await as(app, cntt).post(`/api/admin/activities/${a.id}/comments`).send({ content: 'x'.repeat(2001) }).expect(400);
+    });
+  });
+  // ---------------- thong ke + xuat Excel ----------------
+  describe('thong ke va xuat Excel', () => {
+    const stats = async (s: Session, qs = '') => (await as(app, s).get(`/api/admin/activity-stats${qs}`).expect(200)).body;
+
+    it('KPI: ti le hoan thanh chi tinh hoat dong da danh gia; tham gia lay tu diem danh hoac nhap tay', async () => {
+      const a = await ready({ manualCount: 40, links: [{ group: 'MEDIA', url: 'https://facebook.com/p/1' }, { group: 'PUBLICATION', url: 'https://tdc.edu.vn/tin/1' }] });
+      await advance(a.id, 'EVALUATED');
+      const b = await ready({ manualCount: 10 });
+      await advance(b.id, 'PENDING_EVAL');
+      await act(admin, b.id, 'evaluate', { result: 'NOT_COMPLETED', note: 'Thiếu báo cáo' });
+      await create(cntt, {}); // con Nhap, chua danh gia
+      const s = await stats(admin);
+      expect(s.year.name).toBe('2026–2027');
+      expect(s.kpi).toMatchObject({ total: 3, evaluated: 2, completed: 1, notCompleted: 1, completionRate: 50, participants: 50, withMedia: 1, missingMedia: 2, mediaLinks: 1, publicationLinks: 1 });
+      expect(s.byStatus).toMatchObject({ DRAFT: 1, EVALUATED: 2 });
+      expect(s.byUnit).toHaveLength(1);
+      expect(s.byUnit[0]).toMatchObject({ total: 3, completed: 1, notCompleted: 1 });
+      expect(s.byMonth).toHaveLength(1);
+      // gan buoi diem danh: tham gia chuyen sang lay tu diem danh
+      const ev = await openEvent(w);
+      await checkinAs(w, ev.token);
+      await as(app, admin).post(`/api/admin/activities/${a.id}/events`).send({ eventId: ev.id }).expect(409); // da EVALUATED
+    });
+
+    it('ti le hoan thanh la null khi chua co hoat dong nao duoc danh gia', async () => {
+      await create(cntt);
+      expect((await stats(admin)).kpi).toMatchObject({ total: 1, evaluated: 0, completionRate: null });
+    });
+
+    it('PHAM VI: khoa chi thay so lieu cua minh; xem don vi khac bi 404; nam hoc la bi 404', async () => {
+      await create(cntt);
+      await create(kt);
+      await create(kt);
+      expect((await stats(cntt)).kpi.total).toBe(1);
+      expect((await stats(kt)).kpi.total).toBe(2);
+      expect((await stats(admin)).kpi.total).toBe(3);
+      expect((await stats(admin, `?unitId=${await unitId(ds, 'KT')}`)).kpi.total).toBe(2);
+      await as(app, cntt).get(`/api/admin/activity-stats?unitId=${await unitId(ds, 'KT')}`).expect(404);
+      await as(app, admin).get('/api/admin/activity-stats?academicYearId=3f0c1b6e-8a4d-4c9e-9b1a-2d7e5f6a7b8c').expect(404);
+      await as(app, admin).get('/api/admin/activity-stats?academicYearId=khong-phai-uuid').expect(400);
+    });
+
+    it('xuat Excel: dung dinh dang, chi gom hoat dong trong pham vi, chan formula injection, ghi nhat ky', async () => {
+      await create(cntt, { name: '=HYPERLINK("http://x.vn","bam vao")' });
+      await create(kt, { name: 'Hoat dong cua khoa Kinh te' });
+      const res = await as(app, cntt).get('/api/admin/activity-stats/export.xlsx').buffer(true).parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on('data', (c: Buffer) => chunks.push(c));
+        r.on('end', () => cb(null, Buffer.concat(chunks)));
+      }).expect(200);
+      expect(res.headers['content-type']).toContain('spreadsheetml');
+      expect(res.headers['content-disposition']).toBe('attachment; filename="hoat-dong.xlsx"');
+      const ExcelJS = await import('exceljs');
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.load(res.body as Buffer);
+      const ws = wb.getWorksheet('Hoạt động')!;
+      expect(ws.rowCount).toBe(2); // tieu de + 1 hoat dong cua khoa CNTT
+      expect(String(ws.getRow(2).getCell('B').value)).toBe(`'=HYPERLINK("http://x.vn","bam vao")`);
+      expect(wb.getWorksheet('Tổng hợp theo đơn vị')!.rowCount).toBe(2);
+      expect((await as(app, admin).get('/api/admin/audit-logs?action=ACTIVITY_EXPORT').expect(200)).body.total).toBe(1);
     });
   });
 });
