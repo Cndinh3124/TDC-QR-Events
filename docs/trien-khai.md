@@ -62,7 +62,7 @@ Cập nhật phiên bản mới: `git pull`, `npm ci && npm run build`, chép l�
 Tệp mẫu: `deploy/nginx/tdc-qr.conf`. Sao vào `/etc/nginx/conf.d/`, thay tên miền và đường dẫn chứng chỉ, rồi `nginx -t && systemctl reload nginx`. Tệp đã gồm:
 
 - chuyển `http` → `https`, TLS 1.2/1.3;
-- `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (chỉ cho `geolocation=(self)`), `Content-Security-Policy` chặt (`default-src 'self'`; `img-src` chỉ thêm nền bản đồ OpenStreetMap; `font-src` có `data:` vì Vite nhúng font nhỏ);
+- `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (chỉ cho `geolocation=(self)`), `Content-Security-Policy` chặt (`default-src 'self'`; `img-src` chỉ thêm nền bản đồ CARTO (`*.basemaps.cartocdn.com`); `font-src` có `data:` vì Vite nhúng font nhỏ);
 - `/api/` chuyển về backend, **giữ nguyên `Host` kể cả cổng** (backend so `Origin` với `Host`; dùng `$host` sẽ làm mất phiên khi chạy cổng lạ) và **ghi đè** `X-Forwarded-For` bằng IP thật (không tin header do client gửi);
 - giới hạn tần suất thô theo IP, chỉ để chống DDoS: `/api/public/` (trang điểm danh) 300 yêu cầu/giây, đợt 1000; phần quản trị 50 yêu cầu/giây, đợt 200; vượt ngưỡng trả **429**. Sinh viên dùng 4G/5G, nhưng nhà mạng dùng CGNAT nên nhiều máy vẫn có thể chung một IPv4. Giới hạn thật nằm trong API (theo thiết bị / MSSV). Sau một sự kiện đông, đo xem một IP gom tối đa bao nhiêu máy để chỉnh `rate` / `burst`:
 
@@ -125,7 +125,7 @@ Xem `loadtest/README.md` (k6: 2.000 sinh viên trong 3 phút rồi đợt đỉn
 - **Docker**: môi trường phát triển không có Docker, nên `docker compose up` và image production **chưa chạy thử ở đây** (CI có dựng image và quét Trivy). Hãy chạy thử trước khi dùng thật.
 - **MySQL 8.4**: kiểm thử cục bộ chạy trên MariaDB 10.11; MySQL 8.4 chỉ được kiểm qua CI. Việc này từng lộ lỗi thật (`last_value` là từ khóa của MySQL 8). Bản sao lưu / khôi phục mới thử trên MariaDB.
 - **Chứng chỉ HTTPS thật, Let's Encrypt, HTTP/2 qua Internet**: chỉ thử với chứng chỉ tự ký.
-- **Nền bản đồ OpenStreetMap**: môi trường thử không ra Internet nên chưa thấy ảnh nền thật; CSP đã cho phép `tile.openstreetmap.org`.
+- **Nền bản đồ CARTO** (dữ liệu OpenStreetMap): môi trường thử không ra Internet nên chưa thấy ảnh nền thật; CSP đã cho phép `*.basemaps.cartocdn.com`. Đổi từ `tile.openstreetmap.org` vì một số nhà mạng Việt Nam chặn tên miền này (DNS trả 127.0.0.1 + reset TLS).
 - **iOS Safari / Android Chrome thật**: mới thử bằng Chromium giả lập điện thoại.
 - **Tải thật** (k6) chưa chạy trên máy chủ thật; số đo ở `docs/nhat-ky/giai-doan-5.md` là trên máy dev.
 - **Terraform / hạ tầng dưới dạng mã**: chưa có (chưa biết nhà trường dùng nhà cung cấp nào); mô hình ở trên là một máy chủ thủ công.
