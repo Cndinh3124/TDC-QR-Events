@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, ApiError, EventItem, EventStatus, Page, qs, Unit } from '../api';
 import { useAuth } from '../auth';
 import { Pagination } from '../components/Pagination';
+import { ReasonDialog } from '../components/ReasonDialog';
 import { fmt, StatusBadge } from '../format';
 
 const VIEWS = [
@@ -35,6 +36,9 @@ export function Events() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [data, setData] = useState<Page<EventItem> | null>(null);
   const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState<EventItem | null>(null);
+  const [reload, setReload] = useState(0);
+  const [notice, setNotice] = useState('');
   const isSchool = user?.role === 'SCHOOL_ADMIN';
 
   const setParam = (changes: Record<string, string>, resetPage = true) =>
@@ -63,7 +67,7 @@ export function Events() {
     api<Page<EventItem>>('GET', `/admin/events${qs({ view, q, status, unitId, from: fromDate, to: toDate, page, limit: PAGE_SIZE })}`)
       .then(setData)
       .catch((e) => setError(e instanceof ApiError ? e.message : 'Không tải được danh sách.'));
-  }, [view, q, status, unitId, from, to, page]);
+  }, [view, q, status, unitId, from, to, page, reload]);
 
   const filtered = Boolean(q || status || unitId || from || to);
 
@@ -120,6 +124,7 @@ export function Events() {
       </div>
 
       {error && <div className="error" role="alert">{error}</div>}
+      {notice && <div className="notice" role="status">{notice}</div>}
       <div className="card">
         {!data && !error && <p>Đang tải…</p>}
         {data && data.items.length === 0 && (
@@ -132,7 +137,7 @@ export function Events() {
           <div className="tablewrap">
             <table>
               <thead>
-                <tr><th>Tên sự kiện</th><th>Đơn vị</th><th>Bắt đầu</th><th>Điểm RL</th><th>Trạng thái</th></tr>
+                <tr><th>Tên sự kiện</th><th>Đơn vị</th><th>Bắt đầu</th><th>Điểm RL</th><th>Trạng thái</th><th><span className="sr-only">Thao tác</span></th></tr>
               </thead>
               <tbody>
                 {data.items.map((e) => (
@@ -145,6 +150,12 @@ export function Events() {
                     <td>{fmt(e.startAt)}</td>
                     <td>{e.hasDrl ? e.drlPoints : '—'}</td>
                     <td><StatusBadge status={e.status} checkinState={e.checkinState} archived={e.archivedAt !== null} /></td>
+                    <td style={{ textAlign: 'right' }}>
+                      {/* [NV] 3.7: chi xoa duoc su kien chua chot va chua co luot diem danh (API kiem tra lai) */}
+                      {e.canManage && e.status !== 'FINALIZED' && (
+                        <button className="link danger" onClick={() => { setNotice(''); setDeleting(e); }} aria-label={`Xóa sự kiện ${e.title}`}>Xóa</button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -153,6 +164,19 @@ export function Events() {
         )}
         {data && <Pagination page={data.page} total={data.total} limit={data.limit} onPage={(p) => setParam({ page: String(p) }, false)} />}
       </div>
+
+      {deleting && (
+        <ReasonDialog
+          title={`Xóa hẳn "${deleting.title}"`} confirmText="Xóa hẳn" danger confirmText2={deleting.title}
+          extra={<p className="sub">Chỉ xóa được sự kiện <b>chưa có lượt điểm danh</b>. Sự kiện đã có người điểm danh hãy dùng "Hủy sự kiện" hoặc "Lưu trữ" trong trang chi tiết.</p>}
+          onClose={() => setDeleting(null)}
+          onSubmit={async (reason) => {
+            await api('DELETE', `/admin/events/${deleting.id}`, { reason });
+            setNotice(`Đã xóa sự kiện "${deleting.title}".`);
+            setReload((n) => n + 1);
+          }}
+        />
+      )}
     </>
   );
 }

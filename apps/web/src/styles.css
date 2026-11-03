@@ -259,3 +259,39 @@ ul.notif li.unread button span { font-weight: 700; }
 ul.notif small { color: var(--faint); white-space: nowrap; }
 @media (max-width: 900px) { .kv { grid-template-columns: 1fr; gap: 2px; } .kv dd { margin-bottom: 8px; } }
 td .mono, td.mono { white-space: nowrap; }
+
+/* Ngan keo ben phai (A07: chi tiet luot diem danh) */
+.drawer-overlay { position: fixed; inset: 0; background: rgba(19, 33, 60, 0.35); z-index: 50; display: flex; justify-content: flex-end; }
+.drawer { background: #fff; width: min(520px, 100%); height: 100%; overflow: auto; padding: 20px 22px; box-shadow: -8px 0 24px rgba(19, 33, 60, 0.15); }
+.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.drawer-head h2 { margin: 0; }
+.drawer h3 { font-size: 15px; margin: 18px 0 8px; }
+.drawer .kv { grid-template-columns: 120px 1fr; }
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { border-left: 2px solid var(--divider); padding: 0 0 12px 12px; position: relative; }
+.timeline li::before { content: ''; position: absolute; left: -5px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.timeline .when { color: var(--muted); font-size: 13px; }
+
+/* Lich thang (A13) */
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.cal-head { font-weight: 600; font-size: 13px; color: var(--muted); padding: 8px; background: #f7f9fc; border-bottom: 1px solid var(--border); text-align: center; }
+.cal-cell { min-height: 108px; padding: 6px; border-right: 1px solid var(--divider); border-bottom: 1px solid var(--divider); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cal-cell:nth-child(7n) { border-right: 0; }
+.cal-cell.out { background: #fafbfd; }
+.cal-cell.out .cal-day { color: var(--faint); }
+.cal-cell.today .cal-day { background: var(--primary); color: #fff; border-radius: 12px; padding: 0 8px; align-self: flex-start; }
+.cal-day { font-size: 13px; font-weight: 600; }
+.cal-chip { display: block; font-size: 12px; line-height: 1.35; padding: 2px 6px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+.cal-chip.act { color: var(--info-fg); background: var(--info-bg); }
+.cal-chip.act.ok { color: var(--ok-fg); background: var(--ok-bg); }
+.cal-chip.act.wait { color: var(--wait-fg); background: var(--wait-bg); }
+.cal-chip.act.draft { color: var(--draft-fg); background: var(--draft-bg); }
+.cal-chip.act.err { color: var(--err-fg); background: var(--err-bg); }
+.cal-chip.evt { color: #fff; background: var(--navy); }
+.cal-more { font-size: 12px; text-align: left; }
+.cal-agenda h3 { font-size: 15px; margin: 14px 0 6px; }
+.cal-agenda h3.today { color: var(--primary); }
+.cal-agenda ul { margin: 0; padding-left: 18px; }
+.cal-agenda li { margin-bottom: 4px; }
+@media (max-width: 760px) { .cal-cell { min-height: 72px; padding: 3px; } .cal-chip { font-size: 11px; padding: 1px 3px; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

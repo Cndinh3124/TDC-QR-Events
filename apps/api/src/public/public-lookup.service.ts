@@ -89,8 +89,12 @@ export class PublicLookupService {
 
   // [NV] 3.5: han khieu nai = ket thuc su kien + appeal_days (cau hinh, mac dinh 7)
   async appealDeadline(event: Pick<Event, 'endAt'>): Promise<Date> {
-    const days = await this.settings.get<number>('appeal_days');
+    const days = await this.appealDays();
     return new Date(event.endAt.getTime() + days * 24 * 3600_000);
+  }
+
+  appealDays(): Promise<number> {
+    return this.settings.get<number>('appeal_days');
   }
 
   async mssvRegex(): Promise<RegExp> {

@@ -22,7 +22,7 @@ export class PublicGuard implements CanActivate {
   canActivate(ctx: ExecutionContext): boolean {
     const req = ctx.switchToHttp().getRequest<Request>();
     const res = ctx.switchToHttp().getResponse<Response>();
-    // [BM] tran IP chi chong DDoS: ca hoi truong dung chung mot IP wifi
+    // [BM] tran IP chi chong DDoS: may dung 4G/5G sau CGNAT cua nha mang co the chung mot IPv4
     const wait = this.limits.hit(`ip:${req.ip}`, this.env.publicIpRateLimitPerMin, 60_000);
     if (wait !== null) tooManyRequests(res, wait);
     // [BM] chong CSRF cho request ghi dung cookie: neu co Origin thi phai la trang diem danh

@@ -206,7 +206,9 @@ export class FlagWorker implements OnModuleInit, OnModuleDestroy {
   private async upsertStudent(att: Attendance): Promise<void> {
     await this.ds.query(
       `INSERT INTO students (mssv, full_name_latest, faculty_unit_id, first_seen_at, merged_into) VALUES (?, ?, ?, ?, NULL)
-       ON DUPLICATE KEY UPDATE full_name_latest = VALUES(full_name_latest), faculty_unit_id = VALUES(faculty_unit_id)`,
+       ON DUPLICATE KEY UPDATE
+         full_name_latest = IF(\`profile_locked\`, \`full_name_latest\`, VALUES(\`full_name_latest\`)),
+         faculty_unit_id = IF(\`profile_locked\`, \`faculty_unit_id\`, VALUES(\`faculty_unit_id\`))`,
       [att.mssv, att.fullName, att.facultyUnitId, att.checkinAt],
     );
   }
