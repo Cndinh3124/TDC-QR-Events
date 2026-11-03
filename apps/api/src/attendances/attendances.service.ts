@@ -18,10 +18,14 @@ import { AttendanceEdit } from '../public/entities/attendance-edit.entity';
 import { AttendanceFlag } from '../public/entities/attendance-flag.entity';
 import { PublicLookupService } from '../public/public-lookup.service';
 import {
-  AttendanceDto, AttendanceListQuery, attendanceAuditView, BulkDto, EditAttendanceAdminDto, ManualAttendanceDto,
-  ManualFieldsDto, ReviewDto, toAttendanceDto,
+  AttendanceChange, AttendanceDetail, AttendanceDto, AttendanceEditItem, AttendanceListQuery, attendanceAuditView, BulkDto,
+  EditAttendanceAdminDto, ManualAttendanceDto, ManualFieldsDto, OtherAttendanceItem, ReviewDto, toAttendanceDto,
 } from './dto/attendance.dto';
 import { ReviewService } from './review.service';
+
+const DETAIL_OTHER_LIMIT = 30;
+// truong trong lich su sua duoc hien (dung thu tu nay); khoa doi id -> ten
+const EDIT_FIELDS = ['mssv', 'fullName', 'email', 'facultyUnitId', 'checkinAt', 'checkoutAt', 'reviewStatus', 'voidedAt'];
 
 export interface AttendanceSummary {
   total: number; // khong tinh luot da huy
@@ -96,6 +100,78 @@ export class AttendancesService {
       total: n(r.total), pending: n(r.pending), approved: n(r.approved), rejected: n(r.rejected),
       voided: n(r.voided), flagged: n(r.flagged), cleanPending: n(r.cleanPending), noCheckout: n(r.noCheckout),
     };
+  }
+
+  // [NV] A07: chi tiet mot luot cho ngan keo ben phai. Nguoi chi-xem chi thay luot cua sinh vien khoa minh;
+  // ngoai pham vi deu 404. Su kien khac cua MSSV chi gom su kien nguoi xem nhin thay duoc.
+  async detail(actor: CurrentUser, id: string): Promise<AttendanceDetail> {
+    const a = await this.repo.findOne({ where: { id }, relations: { faculty: true } });
+    if (!a) throw Err.notFound('lượt điểm danh');
+    const { access } = await this.readable(actor, a.eventId).catch(() => {
+      throw Err.notFound('lượt điểm danh');
+    });
+    if (access === 'view' && !(await this.scope.canAccessUnit(actor, a.facultyUnitId))) throw Err.notFound('lượt điểm danh');
+    const attendance = toAttendanceDto(a, (await this.flagsOf([id])).get(id) ?? [], access === 'manage');
+    return { attendance, edits: await this.editsOf(id), otherAttendances: await this.othersOf(actor, a) };
+  }
+
+  private async editsOf(id: string): Promise<AttendanceEditItem[]> {
+    const rows: Array<{ at: Date; actorType: 'STUDENT' | 'ADMIN'; actorName: string | null; reason: string | null; oldJson: unknown; newJson: unknown }> =
+      await this.ds.query(
+        `SELECT ae.created_at AS at, ae.actor_type AS actorType, ae.reason AS reason, ae.old_json AS oldJson, ae.new_json AS newJson,
+                CASE WHEN ae.actor_type = 'ADMIN' THEN u.full_name ELSE NULL END AS actorName
+           FROM attendance_edits ae LEFT JOIN admin_users u ON ae.actor_type = 'ADMIN' AND u.id = ae.actor_id
+          WHERE ae.attendance_id = ? ORDER BY ae.id DESC`,
+        [id],
+      );
+    const parse = (v: unknown): Record<string, unknown> => (typeof v === 'string' ? JSON.parse(v) : (v as Record<string, unknown>) ?? {});
+    const parsed = rows.map((r) => ({ ...r, before: parse(r.oldJson), after: parse(r.newJson) }));
+    // doi id khoa sang ten mot lan cho ca danh sach
+    const unitIds = new Set<string>();
+    for (const r of parsed) for (const o of [r.before, r.after]) if (typeof o.facultyUnitId === 'string') unitIds.add(o.facultyUnitId);
+    const names = new Map<string, string>();
+    if (unitIds.size) {
+      const units: Array<{ id: string; name: string }> = await this.ds.query('SELECT id, name FROM units WHERE id IN (?)', [[...unitIds]]);
+      for (const u of units) names.set(u.id, u.name);
+    }
+    const show = (k: string, v: unknown): string | null => {
+      if (v === null || v === undefined) return null;
+      if (k === 'facultyUnitId') return names.get(String(v)) ?? String(v);
+      return String(v);
+    };
+    return parsed.map((r) => {
+      const changes: AttendanceChange[] = [];
+      for (const k of EDIT_FIELDS) {
+        if (!(k in r.before) && !(k in r.after)) continue;
+        const from = show(k, r.before[k]);
+        const to = show(k, r.after[k]);
+        if (from !== to) changes.push({ field: k, from, to });
+      }
+      return { at: r.at, actorType: r.actorType, actorName: r.actorName ?? null, reason: r.reason, changes };
+    });
+  }
+
+  private async othersOf(actor: CurrentUser, a: Attendance): Promise<OtherAttendanceItem[]> {
+    // MSSV chinh + cac MSSV da gop vao no (cung mot nguoi)
+    const [s] = await this.ds.query('SELECT merged_into AS mergedInto FROM students WHERE mssv = ?', [a.mssv]);
+    const canon: string = s?.mergedInto ?? a.mssv;
+    const visible = await this.events.visibleEventIds(actor);
+    if (visible && visible.length === 0) return [];
+    const rows = await this.ds.query(
+      `SELECT a.id AS attendanceId, e.id AS eventId, e.title AS eventTitle, e.start_at AS eventStartAt, a.checkin_at AS checkinAt,
+              a.mssv AS mssv, a.review_status AS reviewStatus, a.voided_at IS NOT NULL AS voided, a.drl_awarded AS drlAwarded
+         FROM attendances a JOIN events e ON e.id = a.event_id
+        WHERE (a.mssv = ? OR a.mssv IN (SELECT m.mssv FROM students m WHERE m.merged_into = ?))
+          AND a.id <> ? AND a.event_id <> ?
+          ${visible ? 'AND a.event_id IN (?)' : ''}
+        ORDER BY a.checkin_at DESC LIMIT ?`,
+      [canon, canon, a.id, a.eventId, ...(visible ? [visible] : []), DETAIL_OTHER_LIMIT],
+    );
+    return rows.map((r: any) => ({
+      attendanceId: r.attendanceId, eventId: r.eventId, eventTitle: r.eventTitle, eventStartAt: r.eventStartAt, checkinAt: r.checkinAt,
+      mssv: r.mssv, reviewStatus: r.reviewStatus, voided: Boolean(Number(r.voided)),
+      drlAwarded: r.drlAwarded === null ? null : Number(r.drlAwarded),
+    }));
   }
 
   // ---------- duyet ----------
@@ -202,6 +278,8 @@ export class AttendancesService {
         a.voidedAt = new Date();
         a.voidReason = reason;
       } else {
+        // [NV] 3.7: khoi phuc khong duoc tao hai luot cung MSSV trong mot su kien
+        await this.assertMssvFree(m, e.id, a.mssv, a.id);
         a.voidedAt = null;
         a.voidReason = null;
         this.applyReview(a, 'PENDING', undefined, actor.id);
@@ -354,7 +432,9 @@ export class AttendancesService {
   private ensureStudent(m: EntityManager, a: Attendance): Promise<unknown> {
     return m.query(
       `INSERT INTO students (mssv, full_name_latest, faculty_unit_id, first_seen_at, merged_into) VALUES (?, ?, ?, ?, NULL)
-       ON DUPLICATE KEY UPDATE full_name_latest = VALUES(full_name_latest), faculty_unit_id = VALUES(faculty_unit_id)`,
+       ON DUPLICATE KEY UPDATE
+         full_name_latest = IF(\`profile_locked\`, \`full_name_latest\`, VALUES(\`full_name_latest\`)),
+         faculty_unit_id = IF(\`profile_locked\`, \`faculty_unit_id\`, VALUES(\`faculty_unit_id\`))`,
       [a.mssv, a.fullName, a.facultyUnitId, a.checkinAt],
     );
   }

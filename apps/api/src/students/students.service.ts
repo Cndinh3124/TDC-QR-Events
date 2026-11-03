@@ -86,7 +86,11 @@ export class StudentsService {
     const before = { fullName: s.fullName, facultyUnitId: s.facultyId };
     const fullName = dto.fullName ?? s.fullName;
     const facultyUnitId = dto.facultyUnitId ?? s.facultyId;
-    await this.ds.query('UPDATE students SET full_name_latest = ?, faculty_unit_id = ? WHERE mssv = ?', [fullName, facultyUnitId, mssv]);
+    // [NV] 3.7: quan tri da sua thi khoa ho so, lan diem danh sau khong ghi de ten / khoa
+    await this.ds.query(
+      'UPDATE students SET full_name_latest = ?, faculty_unit_id = ?, `profile_locked` = 1 WHERE mssv = ?',
+      [fullName, facultyUnitId, mssv],
+    );
     await this.audit.log(actor, 'STUDENT_UPDATE', 'student', mssv, { before, after: { fullName, facultyUnitId }, reason: dto.reason });
     return (await this.get(actor, mssv)).student;
   }
