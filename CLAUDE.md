@@ -41,7 +41,10 @@ npm run -w apps/api migration:run          # sau khi build
 - `links` / `coUnitIds` khi sửa hoạt động là **thay thế cả bộ**, không phải thêm.
 - Nginx phải giữ nguyên `Host` kể cả cổng (`$http_host`): API so `Origin` với `Host`.
 - Khi tắt tiến trình nền bằng shell, dùng file pid; **đừng `pkill -f` theo đường dẫn** (có thể giết chính shell).
+- SQL thô trong template string JS: backtick phải viết `\``.
+- Vitest 5: đừng dùng `vi.fn().mockRejectedValue` cho hàm API giả. Test sẽ thất bại với chính lỗi đó dù component đã bắt; dùng hàm giả thường trả `Promise.reject`.
+- `students.profile_locked`: hồ sơ quản trị đã sửa thì mọi chỗ `INSERT ... ON DUPLICATE KEY UPDATE students` phải giữ nguyên tên / khoa.
 
 ## Trạng thái
 
-Giai đoạn 1–7 xong (xem README). Còn: lịch hoạt động, nhập Excel, xuất PDF theo mẫu Đoàn, báo cáo đơn vị, ngăn kéo chi tiết điểm danh (A07) — cần mẫu biểu của nhà trường. Chưa kiểm chứng: Docker, MySQL 8.4 cục bộ, thiết bị thật, tải thật.
+Giai đoạn 1–8 xong (xem README). Còn: nhập Excel, xuất PDF theo mẫu Đoàn, báo cáo đơn vị — cần mẫu biểu của nhà trường. Chưa kiểm chứng: Docker, MySQL 8.4 cục bộ, thiết bị thật, tải thật.

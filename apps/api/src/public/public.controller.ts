@@ -1,5 +1,5 @@
 // API cong khai cho sinh vien - /api/public (dac ta 7). Khong can tai khoan.
-// [BM] @Public + bo gioi han IP chung (3.000/phut khong du cho ca hoi truong dung chung mot IP);
+// [BM] @Public + bo gioi han IP chung (3.000/phut khong du khi nhieu may 4G/5G chung IPv4 qua CGNAT);
 // thay bang gioi han IP rieng cao hon + gioi han theo thiet bi trong PublicContextService.
 import { Body, Controller, Get, Header, Param, ParseUUIDPipe, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';

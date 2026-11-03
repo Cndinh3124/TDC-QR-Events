@@ -14,7 +14,7 @@ export interface AppEnv {
   publicBaseUrl: string;
   // [BM] khoa HMAC ky cookie thiet bi (dac ta 4); rieng voi JWT de lo mot khoa khong keo theo khoa kia
   deviceSecret: string;
-  // gioi han tan suat diem danh cong khai (dac ta 8.4); IP chi o muc chong DDoS vi ca hoi truong dung chung IP
+  // gioi han tan suat diem danh cong khai (dac ta 8.4); IP chi o muc chong DDoS vi nhieu may 4G/5G chung IPv4 qua CGNAT
   publicDeviceRateLimitPerMin: number;
   publicEditRateLimitPerHour: number;
   publicIpRateLimitPerMin: number;

@@ -19,6 +19,7 @@ const Present = lazy(() => import('./pages/Present').then((m) => ({ default: m.P
 const RequireAdmin = lazy(() => import('./pages/Layout').then((m) => ({ default: m.RequireAdmin })));
 const Activities = lazy(() => import('./pages/Activities').then((m) => ({ default: m.Activities })));
 const ActivityStats = lazy(() => import('./pages/ActivityStats').then((m) => ({ default: m.ActivityStats })));
+const ActivityCalendar = lazy(() => import('./pages/ActivityCalendar').then((m) => ({ default: m.ActivityCalendar })));
 const ActivityConfig = lazy(() => import('./pages/ActivityConfig').then((m) => ({ default: m.ActivityConfig })));
 const ActivityDetail = lazy(() => import('./pages/ActivityDetail').then((m) => ({ default: m.ActivityDetail })));
 const ActivityForm = lazy(() => import('./pages/ActivityForm').then((m) => ({ default: m.ActivityForm })));
@@ -60,6 +61,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/su-kien/:id/duyet" element={<Review />} />
             <Route path="/hoat-dong" element={<Activities />} />
             <Route path="/hoat-dong/thong-ke" element={<ActivityStats />} />
+            <Route path="/hoat-dong/lich" element={<ActivityCalendar />} />
             <Route path="/hoat-dong/moi" element={<ActivityForm />} />
             <Route path="/hoat-dong/:id" element={<ActivityDetail />} />
             <Route path="/hoat-dong/:id/sua" element={<ActivityForm />} />

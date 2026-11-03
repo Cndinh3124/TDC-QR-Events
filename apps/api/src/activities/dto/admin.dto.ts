@@ -44,6 +44,13 @@ export class NotificationQuery extends PaginationQuery {
   @IsOptional() @Transform(({ value }) => value === 'true' || value === true) @IsBoolean() unread?: boolean;
 }
 
+// [NV] A13: lich thang - khoang ngay theo gio Viet Nam (+07:00), toi da 62 ngay
+export class CalendarQuery {
+  @Matches(DAY, { message: DAY_MSG }) from: string;
+  @Matches(DAY, { message: DAY_MSG }) to: string;
+  @IsOptional() @IsUUID() unitId?: string;
+}
+
 export class ActivityStatsQuery {
   @IsOptional() @IsUUID() academicYearId?: string;
   @IsOptional() @IsUUID() unitId?: string;
