@@ -53,6 +53,7 @@ export function Layout() {
         <NavLink to="/tong-quan">Tổng quan{due > 0 && <span className="nav-badge" title="Việc cần xử lý">{due}</span>}</NavLink>
         <div className="group">Hoạt động</div>
         <NavLink to="/hoat-dong" end>Hồ sơ hoạt động</NavLink>
+        <NavLink to="/hoat-dong/lich">Lịch hoạt động</NavLink>
         <NavLink to="/hoat-dong/thong-ke">Thống kê hoạt động</NavLink>
         <div className="group">Điểm danh</div>
         <NavLink to="/su-kien">Sự kiện</NavLink>

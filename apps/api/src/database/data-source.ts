@@ -33,6 +33,7 @@ import { AddEventFacultyView1793501916085 } from './migrations/1793501916085-add
 import { EventFacultyViewMode1793502499621 } from './migrations/1793502499621-event-faculty-view-mode';
 import { AddAttendance1793600000000 } from './migrations/1793600000000-add-attendance';
 import { AddAppeals1793700000000 } from './migrations/1793700000000-add-appeals';
+import { StudentProfileLock1793900000000 } from './migrations/1793900000000-student-profile-lock';
 
 export const ENTITIES = [
   Unit, AdminUser, RefreshToken, SystemSetting, AuditLog, Event, EventQrToken, EventFacultyView,
@@ -42,7 +43,7 @@ export const ENTITIES = [
 ];
 export const MIGRATIONS = [
   InitSchema1793495899423, AddEvents1793500640024, AddEventFacultyView1793501916085, EventFacultyViewMode1793502499621,
-  AddAttendance1793600000000, AddAppeals1793700000000, AddActivities1793800000000,
+  AddAttendance1793600000000, AddAppeals1793700000000, AddActivities1793800000000, StudentProfileLock1793900000000,
 ];
 
 export function buildDbOptions(env: AppEnv): DataSourceOptions {

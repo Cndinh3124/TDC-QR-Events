@@ -28,6 +28,13 @@ export class AttendancesController {
     return this.attendances.summary(u, id);
   }
 
+  // [NV] A07: ngan keo chi tiet - lich su sua, su kien khac cua cung MSSV
+  @Header('Cache-Control', NO_STORE)
+  @Get('attendances/:id')
+  detail(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string) {
+    return this.attendances.detail(u, id);
+  }
+
   @Post('events/:id/attendances')
   createManual(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ManualAttendanceDto) {
     return this.attendances.createManual(u, id, dto);

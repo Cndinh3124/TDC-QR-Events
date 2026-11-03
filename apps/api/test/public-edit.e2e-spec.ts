@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import request from 'supertest';
 import { Attendance } from '../src/public/entities/attendance.entity';
-import { checkinAs, checkinBody, createTestApp, deviceCookie, openEvent, postCheckin, setupWorld, World } from './public-helpers';
+import { checkinAs, checkinBody, createTestApp, deviceCookie, openEvent, patchEvent, postCheckin, setupWorld, World } from './public-helpers';
 
 describe('Diem danh cong khai - sua thong tin va lich su', () => {
   let app: INestApplication;
@@ -180,6 +180,30 @@ describe('Diem danh cong khai - sua thong tin va lich su', () => {
       const text = JSON.stringify(seen);
       for (const secret of ['Ke Mao Danh', fraud.attendance.confirmCode, 'deviceId', 'ip']) expect(text).not.toContain(secret);
       expect(Object.keys(theirs).sort()).toEqual(['checkinAt', 'checkoutAt', 'confirmCode', 'eventStartAt', 'eventTitle', 'timeliness', 'viaThisDevice']);
+    });
+
+    it('[BM] luot do thiet bi khac chi hien khi su kien con han khieu nai; luot cua chinh thiet bi van hien du', async () => {
+      const day = 24 * 3600e3;
+      const past = (d: number) => ({
+        startAt: new Date(Date.now() - (d + 1) * day), endAt: new Date(Date.now() - d * day),
+        checkinOpenAt: new Date(Date.now() - (d + 1) * day), checkinCloseAt: new Date(Date.now() - d * day),
+      });
+      const victim = '24211TM7101';
+      // nguoi that diem danh tu lau o su kien cu
+      const old = await openEvent(w, { title: 'Sự kiện cũ của chủ MSSV' });
+      const real = await checkinAs(w, old.token, { mssv: victim });
+      await patchEvent(w, old.id, past(30));
+      // ke khac go MSSV cua nguoi that o mot su kien dang mo
+      const now = await openEvent(w, { title: 'Sự kiện đang mở' });
+      const snoop = await checkinAs(w, now.token, { mssv: victim });
+      const seen = (await history(snoop.cookie).expect(200)).body.items.map((i: any) => i.eventTitle);
+      expect(seen).toEqual(['Sự kiện đang mở']); // khong xem duoc qua trinh tham gia cu
+      // chu MSSV van thay luot cu cua minh va luot dang bi mao danh (con han khieu nai)
+      const mine = (await history(real.cookie).expect(200)).body.items;
+      expect(mine.map((i: any) => i.eventTitle).sort()).toEqual(['Sự kiện cũ của chủ MSSV', 'Sự kiện đang mở']);
+      // het han khieu nai (mac dinh 7 ngay) thi luot do thiet bi khac khong con hien
+      await patchEvent(w, now.id, past(8));
+      expect((await history(real.cookie).expect(200)).body.items.map((i: any) => i.eventTitle)).toEqual(['Sự kiện cũ của chủ MSSV']);
     });
 
     it('[BM] thiet bi KHONG thay lich su cua MSSV khac (khong gan voi thiet bi nay); luot da huy khong hien', async () => {

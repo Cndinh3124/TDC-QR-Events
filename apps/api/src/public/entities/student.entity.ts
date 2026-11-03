@@ -24,4 +24,8 @@ export class Student {
   // gop hai MSSV (giai doan 4)
   @Column({ name: 'merged_into', type: 'varchar', length: 20, nullable: true })
   mergedInto: string | null;
+
+  // quan tri da sua ten / khoa: diem danh sau khong ghi de thong tin sinh vien tu nhap
+  @Column({ name: 'profile_locked', type: 'boolean', default: false })
+  profileLocked: boolean;
 }

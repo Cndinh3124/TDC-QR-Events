@@ -184,6 +184,29 @@ export interface AttendanceRow {
   flags: Array<{ code: string; detail: Record<string, unknown> | null }>;
 }
 
+// [NV] A07: ngan keo chi tiet mot luot
+export interface AttendanceDetail {
+  attendance: AttendanceRow;
+  edits: Array<{
+    at: string;
+    actorType: 'STUDENT' | 'ADMIN';
+    actorName: string | null;
+    reason: string | null;
+    changes: Array<{ field: string; from: string | null; to: string | null }>;
+  }>;
+  otherAttendances: Array<{
+    attendanceId: string;
+    eventId: string;
+    eventTitle: string;
+    eventStartAt: string;
+    checkinAt: string;
+    mssv: string;
+    reviewStatus: ReviewStatus;
+    voided: boolean;
+    drlAwarded: number | null;
+  }>;
+}
+
 export interface AttendanceSummary {
   total: number;
   pending: number;

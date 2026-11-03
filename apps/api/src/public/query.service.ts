@@ -79,6 +79,8 @@ export class QueryService {
 
   // [NV] 5.4: lich su cua cac MSSV hien dang gan voi thiet bi nay, ke ca luot do thiet bi khac diem danh,
   // de nguoi bi diem danh ho tu phat hien. Chi tra ten su kien + gio; ma xac nhan chi cua luot tu thiet bi nay.
+  // [BM] (sua loi review 02/11/2026) luot do THIET BI KHAC chi hien khi su kien con trong han khieu nai:
+  // nguoi bi diem danh ho van thay kip de khieu nai, con ai go MSSV cua nguoi khac thi khong xem duoc ca qua trinh tham gia.
   async history(device: DeviceIdentity | null) {
     if (!device) return { items: [] };
     const mine = await this.ds.query(
@@ -86,12 +88,15 @@ export class QueryService {
       [device.id],
     );
     if (mine.length === 0) return { items: [] };
+    const days = await this.lookup.appealDays();
+    const appealOpenSince = new Date(Date.now() - days * 24 * 3600_000); // end_at >= moc nay <=> con han khieu nai
     const rows = await this.ds
       .createQueryBuilder(Attendance, 'a')
       .innerJoin(Event, 'e', 'e.id = a.eventId')
       .select(['a.deviceId AS deviceId', 'a.checkinAt AS checkinAt', 'a.checkoutAt AS checkoutAt',
         'a.timeliness AS timeliness', 'a.confirmCode AS confirmCode', 'e.title AS title', 'e.startAt AS startAt'])
       .where('a.mssv IN (:...mssvs) AND a.voidedAt IS NULL', { mssvs: mine.map((r: { mssv: string }) => r.mssv) })
+      .andWhere('(a.deviceId = :dev OR e.endAt >= :since)', { dev: device.id, since: appealOpenSince })
       .orderBy('a.checkinAt', 'DESC')
       .limit(HISTORY_LIMIT)
       .getRawMany();
