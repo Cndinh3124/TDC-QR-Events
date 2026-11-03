@@ -102,6 +102,22 @@ export class EventsService {
     return { items, total, page: q.page, limit: q.limit };
   }
 
+  // [NV] A13: su kien giao voi khoang [from, to) cho lich thang; cung luat nhin thay nhu danh sach, bo su kien luu tru
+  async calendarItems(actor: CurrentUser, from: Date, to: Date, unitIds: string[] | null, max: number) {
+    const ids = await this.scope.visibleUnitIds(actor);
+    const qb = this.events.createQueryBuilder('e').leftJoinAndSelect('e.unit', 'u')
+      .where('e.startAt < :to AND e.endAt >= :from', { from, to })
+      .andWhere('e.archivedAt IS NULL');
+    this.applyVisibility(qb, ids);
+    if (unitIds) qb.andWhere('e.unitId IN (:...tree)', { tree: unitIds });
+    const rows = await qb.orderBy('e.startAt', 'ASC').addOrderBy('e.id', 'ASC').take(max).getMany();
+    return rows.map((e) => ({
+      id: e.id, title: e.title, startAt: e.startAt, endAt: e.endAt, status: e.status, locationName: e.locationName,
+      unit: e.unit ? { id: e.unit.id, name: e.unit.name } : null,
+      canManage: ids === null || ids.includes(e.unitId),
+    }));
+  }
+
   // [NV] 2.2: ngoai su kien trong pham vi, quan ly khoa con thay su kien cap truong Doan truong cho xem (chi doc):
   // che do ALL, hoac SELECTED va co khoa nam trong pham vi cua ho. Alias: e = events, u = units cua don vi to chuc.
   private applyVisibility(qb: SelectQueryBuilder<Event>, ids: string[] | null): void {

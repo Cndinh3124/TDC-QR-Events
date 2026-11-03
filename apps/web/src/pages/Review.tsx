@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, ApiError, AttendanceRow, AttendanceSummary, EventItem, Page, qs } from '../api';
 import { useAuth } from '../auth';
+import { AttendanceDrawer } from '../components/AttendanceDrawer';
 import { AttendanceForm } from '../components/AttendanceForm';
 import { Dialog } from '../components/Dialog';
 import { ReasonDialog } from '../components/ReasonDialog';
@@ -225,25 +226,7 @@ export function Review() {
           </div>
         </Dialog>
       )}
-      {dlg?.kind === 'detail' && (
-        <Dialog title={dlg.row.fullName} onClose={() => setDlg(null)}>
-          <table><tbody>
-            <tr><td>MSSV</td><td className="mono">{dlg.row.mssv}</td></tr>
-            <tr><td>Khoa</td><td>{dlg.row.faculty?.name}</td></tr>
-            <tr><td>Email</td><td>{dlg.row.email ?? '—'}</td></tr>
-            <tr><td>Giờ vào</td><td>{fmt(dlg.row.checkinAt)} · {dlg.row.timeliness === 'ON_TIME' ? 'Đúng giờ' : 'Trễ giờ'}</td></tr>
-            <tr><td>Giờ ra</td><td>{dlg.row.checkoutAt ? fmt(dlg.row.checkoutAt) : '—'}</td></tr>
-            <tr><td>Nguồn</td><td>{dlg.row.source === 'MANUAL' ? 'Thêm thủ công' : 'Sinh viên tự điểm danh'}{dlg.row.deviceRef ? ` · máy ${dlg.row.deviceRef}` : ''}</td></tr>
-            <tr><td>Khoảng cách</td><td>{dlg.row.distanceM === null ? '—' : `${dlg.row.distanceM} m`}</td></tr>
-            <tr><td>Mã xác nhận</td><td className="mono">{dlg.row.confirmCode ?? 'Ẩn'}</td></tr>
-            <tr><td>Số lần sửa</td><td>{dlg.row.editCount}</td></tr>
-            {dlg.row.reviewNote && <tr><td>Ghi chú duyệt</td><td>{dlg.row.reviewNote}</td></tr>}
-            {dlg.row.voidReason && <tr><td>Lý do hủy</td><td>{dlg.row.voidReason}</td></tr>}
-            <tr><td>Cờ</td><td>{dlg.row.flags.length ? dlg.row.flags.map((f) => FLAG_LABEL[f.code] ?? f.code).join(', ') : 'Không có'}</td></tr>
-          </tbody></table>
-          <div className="row" style={{ justifyContent: 'flex-end', marginTop: 12 }}><button className="btn" onClick={() => setDlg(null)}>Đóng</button></div>
-        </Dialog>
-      )}
+      {dlg?.kind === 'detail' && <AttendanceDrawer row={dlg.row} onClose={() => setDlg(null)} />}
     </>
   );
 }

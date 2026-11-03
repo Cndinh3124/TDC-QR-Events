@@ -157,6 +157,15 @@ describe('Sinh vien va bao cao DRL', () => {
       expect(detail.body.history).toHaveLength(1);
     });
 
+    it('[NV] 3.7: quan tri da sua ten / khoa thi lan diem danh sau khong ghi de; ho so chua sua van cap nhat theo lan moi nhat', async () => {
+      await api(w.admin).patch(`/api/admin/students/${A}`).send({ fullName: 'Nguyễn Văn An', facultyUnitId: w.faculty2, reason: 'Sua theo danh sach lop' }).expect(200);
+      await run(3, [[A, 'an go sai', w.faculty], [B, 'Le Van Binh', w.faculty]], false);
+      const a = (await api(w.admin).get(`/api/admin/students/${A}`).expect(200)).body.student;
+      expect(a).toMatchObject({ fullName: 'Nguyễn Văn An', faculty: { id: w.faculty2 } });
+      const b = (await api(w.admin).get(`/api/admin/students/${B}`).expect(200)).body.student;
+      expect(b).toMatchObject({ fullName: 'Le Van Binh', faculty: { id: w.faculty } });
+    });
+
     it('TU CHOI: sinh vien khoa khac -> 404; MSSV la -> 404; chua dang nhap 401', async () => {
       await api(mgr).get(`/api/admin/students/${B}`).expect(404);
       await api(w.admin).get('/api/admin/students/KHONG-CO').expect(404);
