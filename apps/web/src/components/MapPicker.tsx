@@ -1,4 +1,4 @@
-// Ban do chon toa do diem danh (Leaflet + OpenStreetMap) - dac ta 9, 10.
+// Ban do chon toa do diem danh (Leaflet + OpenStreetMap qua CARTO) - dac ta 9, 10.
 // Bam len ban do hoac keo dau ghim de dat diem; vong tron the hien ban kinh cho phep.
 // Tai rieng (React.lazy) vi chi man quan tri can; trang diem danh cua sinh vien khong keo theo Leaflet.
 import L from 'leaflet';
@@ -34,9 +34,12 @@ export function MapPicker({ latitude, longitude, radiusM, onPick, height = 280 }
       latitude !== null && longitude !== null ? [latitude, longitude] : DEFAULT_CENTER,
       latitude !== null ? 17 : 15,
     );
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+    // CARTO (du lieu OSM): tile.openstreetmap.org bi mot so nha mang VN chan (DNS + reset TLS)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 20,
+      attribution:
+        '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> © <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
     }).addTo(m);
     if (onPickRef.current) m.on('click', (e: L.LeafletMouseEvent) => onPickRef.current?.(round(e.latlng.lat), round(e.latlng.lng)));
     map.current = m;
