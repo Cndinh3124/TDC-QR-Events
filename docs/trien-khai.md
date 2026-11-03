@@ -64,7 +64,12 @@ Tệp mẫu: `deploy/nginx/tdc-qr.conf`. Sao vào `/etc/nginx/conf.d/`, thay tê
 - chuyển `http` → `https`, TLS 1.2/1.3;
 - `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (chỉ cho `geolocation=(self)`), `Content-Security-Policy` chặt (`default-src 'self'`; `img-src` chỉ thêm nền bản đồ OpenStreetMap; `font-src` có `data:` vì Vite nhúng font nhỏ);
 - `/api/` chuyển về backend, **giữ nguyên `Host` kể cả cổng** (backend so `Origin` với `Host`; dùng `$host` sẽ làm mất phiên khi chạy cổng lạ) và **ghi đè** `X-Forwarded-For` bằng IP thật (không tin header do client gửi);
-- giới hạn tần suất thô theo IP rất rộng (50 yêu cầu/giây, đợt 200) vì nhiều sinh viên dùng chung IP wifi trường; giới hạn thật nằm trong API (theo thiết bị / MSSV);
+- giới hạn tần suất thô theo IP, chỉ để chống DDoS: `/api/public/` (trang điểm danh) 300 yêu cầu/giây, đợt 1000; phần quản trị 50 yêu cầu/giây, đợt 200; vượt ngưỡng trả **429**. Sinh viên dùng 4G/5G, nhưng nhà mạng dùng CGNAT nên nhiều máy vẫn có thể chung một IPv4. Giới hạn thật nằm trong API (theo thiết bị / MSSV). Sau một sự kiện đông, đo xem một IP gom tối đa bao nhiêu máy để chỉnh `rate` / `burst`:
+
+  ```sql
+  SELECT ip, COUNT(DISTINCT device_id) AS so_thiet_bi FROM attendances
+   WHERE event_id = '<id-su-kien>' AND source = 'SELF' GROUP BY ip ORDER BY so_thiet_bi DESC LIMIT 20;
+  ```
 - `/assets/` cache 1 năm, `index.html` không cache, mọi đường dẫn khác trả `index.html` (React Router), chặn tệp ẩn.
 
 ## 6. Sao lưu và khôi phục

@@ -168,6 +168,40 @@ export function toAttendanceDto(a: Attendance, flags: AttendanceFlag[], showCode
   };
 }
 
+// [NV] A07: ngan keo chi tiet mot luot - lich su sua va cac su kien khac cua cung MSSV
+export interface AttendanceChange {
+  field: string;
+  from: string | null;
+  to: string | null;
+}
+
+export interface AttendanceEditItem {
+  at: Date;
+  actorType: 'STUDENT' | 'ADMIN';
+  // ten quan tri; sinh vien tu sua thi null (khong lo ma thiet bi)
+  actorName: string | null;
+  reason: string | null;
+  changes: AttendanceChange[];
+}
+
+export interface OtherAttendanceItem {
+  attendanceId: string;
+  eventId: string;
+  eventTitle: string;
+  eventStartAt: Date;
+  checkinAt: Date;
+  mssv: string; // khac MSSV dang xem khi la MSSV da gop
+  reviewStatus: ReviewStatus;
+  voided: boolean;
+  drlAwarded: number | null;
+}
+
+export interface AttendanceDetail {
+  attendance: AttendanceDto;
+  edits: AttendanceEditItem[];
+  otherAttendances: OtherAttendanceItem[];
+}
+
 // truong an toan de ghi nhat ky / lich su sua
 export function attendanceAuditView(a: Attendance) {
   return {

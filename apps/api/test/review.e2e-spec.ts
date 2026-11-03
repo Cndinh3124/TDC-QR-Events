@@ -279,6 +279,16 @@ describe('Duyet va chot su kien', () => {
       expect((await api(w.admin).patch(`/api/admin/attendances/${b}`).send({ checkinAt: tooLate, reason: 'Qua khung' }).expect(400)).body.code).toBe('CHECKIN_OUT_OF_RANGE');
     });
 
+    it('TU CHOI: khoi phuc luot khi MSSV da co luot khac con hieu luc -> 409 DUPLICATE_MSSV', async () => {
+      const { c, d } = await setup(); // c, d cung MSSV
+      await api(w.admin).post(`/api/admin/attendances/${c}/void`).send({ reason: 'Trung MSSV' }).expect(200);
+      const r = await api(w.admin).post(`/api/admin/attendances/${c}/restore`).send({ reason: 'Khoi phuc' }).expect(409);
+      expect(r.body.code).toBe('DUPLICATE_MSSV');
+      expect((await row(c)).voidedAt).not.toBeNull();
+      await api(w.admin).post(`/api/admin/attendances/${d}/void`).send({ reason: 'Luot ho' }).expect(200);
+      await api(w.admin).post(`/api/admin/attendances/${c}/restore`).send({ reason: 'Khoi phuc' }).expect(200);
+    });
+
     it('huy / khoi phuc: ly do bat buoc, khong xoa cung, khoi phuc ve cho duyet, luot huy khong duoc cong diem', async () => {
       const { ev, a, b } = await setup();
       await api(w.admin).post(`/api/admin/attendances/${a}/void`).send({}).expect(400);

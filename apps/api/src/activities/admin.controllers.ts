@@ -5,9 +5,10 @@ import { CurrentUser as CurrentUserType } from '../common/current-user';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ReasonDto } from '../common/dto/reason.dto';
 import { AcademicYearsService } from './academic-years.service';
+import { CalendarService } from './calendar.service';
 import { CategoriesService } from './categories.service';
 import { ActivityStatsService } from './activity-stats.service';
-import { ActivityStatsQuery, CreateCategoryDto, CreateYearDto, NotificationQuery, UpdateCategoryDto, UpdateYearDto } from './dto/admin.dto';
+import { ActivityStatsQuery, CalendarQuery, CreateCategoryDto, CreateYearDto, NotificationQuery, UpdateCategoryDto, UpdateYearDto } from './dto/admin.dto';
 import { NotificationsService } from './notifications.service';
 
 @Controller('admin/academic-years')
@@ -109,5 +110,17 @@ export class ActivityStatsController {
     // ten tep co dinh, khong dua du lieu nguoi dung vao header
     res.set({ 'Content-Type': XLSX, 'Content-Disposition': 'attachment; filename="hoat-dong.xlsx"', 'Cache-Control': 'no-store' });
     return new StreamableFile(file);
+  }
+}
+
+// [NV] A13: lich thang - hoat dong va buoi diem danh trong khoang ngay, theo pham vi nguoi xem
+@Controller('admin/activity-calendar')
+export class ActivityCalendarController {
+  constructor(private readonly cal: CalendarService) {}
+
+  @Header('Cache-Control', 'no-store')
+  @Get()
+  get(@CurrentUser() u: CurrentUserType, @Query() q: CalendarQuery) {
+    return this.cal.calendar(u, q);
   }
 }
