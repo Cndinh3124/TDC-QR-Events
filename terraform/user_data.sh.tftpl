@@ -1,0 +1,129 @@
+#!/bin/bash
+# Khoi tao may chu TDC QR Events (chay mot lan luc khoi dong, bang cloud-init).
+# Nhat ky: /var/log/tdc-bootstrap.log. Cap nhat ma nguon sau nay: `sudo tdc-deploy` (xem terraform/README.md).
+# Luu y cho nguoi sua: file nay la template Terraform; trong shell tranh viet dau $ kem ngoac nhon.
+set -euo pipefail
+exec > >(tee -a /var/log/tdc-bootstrap.log) 2>&1
+export DEBIAN_FRONTEND=noninteractive
+export AWS_DEFAULT_REGION=${region}
+
+# --- swap 2 GB: build giao dien + MySQL tren may 2 GB RAM de het bo nho ---
+if [ ! -f /swapfile ]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+# --- goi can thiet ---
+apt-get update -y
+apt-get install -y docker.io docker-compose-v2 nginx certbot unzip curl
+systemctl enable --now docker
+
+# AWS CLI v2 (Ubuntu 24.04 khong con goi awscli trong apt)
+if ! command -v aws >/dev/null; then
+  curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip
+  unzip -q /tmp/awscliv2.zip -d /tmp
+  /tmp/aws/install
+  rm -rf /tmp/aws /tmp/awscliv2.zip
+fi
+
+# --- kich ban trien khai: chay lai duoc nhieu lan (cap nhat ma nguon) ---
+cat > /usr/local/bin/tdc-deploy <<'DEPLOY'
+#!/bin/bash
+set -euo pipefail
+export AWS_DEFAULT_REGION=${region}
+export COMPOSE_PROJECT_NAME=tdc-qr
+DOMAIN=${domain}
+APP=/opt/tdc-qr/app
+
+get() { aws ssm get-parameter --with-decryption --name "${ssm_prefix}/$1" --query Parameter.Value --output text; }
+
+# 1. ma nguon moi nhat tu S3
+mkdir -p /opt/tdc-qr
+aws s3 cp s3://${bucket}/source.tar.gz /opt/tdc-qr/source.tar.gz
+rm -rf "$APP"
+mkdir -p "$APP"
+tar -xzf /opt/tdc-qr/source.tar.gz -C "$APP"
+cd "$APP"
+
+# 2. .env (quyen 600). [BM] bi mat doc tu SSM, khong nam trong ma nguon / user_data
+umask 077
+cat > .env <<ENVFILE
+NODE_ENV=production
+PORT=3000
+DB_HOST=db
+DB_USER=tdc_app
+DB_PASSWORD=$(get db-password)
+DB_NAME=tdc_qr
+DB_SSL=false
+JWT_ACCESS_SECRET=$(get jwt-secret)
+DEVICE_SECRET=$(get device-secret)
+COOKIE_SECURE=true
+TRUST_PROXY=true
+PUBLIC_BASE_URL=https://$DOMAIN
+ENVFILE
+umask 022
+
+# 3. giao dien: dung trong container Node de may chu khong can cai Node
+docker run --rm -v "$APP":/repo -w /repo node:22.23.4-bookworm-slim sh -c 'npm ci && npm run -w apps/web build'
+mkdir -p /var/www/tdc-qr
+rm -rf /var/www/tdc-qr/*
+cp -r apps/web/dist/* /var/www/tdc-qr/
+
+# 4. CSDL + migration + API
+docker compose up -d --build
+for i in $(seq 1 60); do
+  if curl -fsS http://127.0.0.1:3000/api/healthz >/dev/null 2>&1; then break; fi
+  sleep 5
+done
+curl -fsS http://127.0.0.1:3000/api/healthz >/dev/null
+
+# 5. tai khoan QTV Doan truong dau tien (da co roi thi lenh bao loi, bo qua)
+export ADMIN_PASSWORD="$(get admin-password)"
+docker compose run --rm -e ADMIN_PASSWORD api node dist/cli/create-admin.js --email '${admin_email}' --name '${admin_name}' || echo "Bo qua tao QTV (co the da ton tai)"
+unset ADMIN_PASSWORD
+
+# 6. nginx + HTTPS
+mkdir -p /var/www/certbot
+rm -f /etc/nginx/sites-enabled/default
+if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+  # cau hinh tam chi cong 80 de Let's Encrypt xac thuc
+  cat > /etc/nginx/conf.d/tdc-qr.conf <<NGINXTMP
+server {
+    listen 80;
+    server_name $DOMAIN;
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location / { return 200 'dang khoi tao'; }
+}
+NGINXTMP
+  nginx -t
+  systemctl reload nginx
+  # ban ghi DNS co the chua lan truyen ngay: thu lai toi ~15 phut
+  for i in $(seq 1 30); do
+    if certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" --non-interactive --agree-tos ${certbot_args}; then break; fi
+    sleep 30
+  done
+fi
+test -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
+
+# cau hinh that tu deploy/nginx/tdc-qr.conf: doi ten mien + duong dan chung chi, them loi xac thuc cho cong 80
+sed -e "s#tdc-qr.example.edu.vn#$DOMAIN#g" \
+    -e "s#/etc/ssl/tdc-qr/fullchain.pem#/etc/letsencrypt/live/$DOMAIN/fullchain.pem#" \
+    -e "s#/etc/ssl/tdc-qr/privkey.pem#/etc/letsencrypt/live/$DOMAIN/privkey.pem#" \
+    -e '0,/listen \[::\]:80;/s/listen \[::\]:80;/&\n    location \/.well-known\/acme-challenge\/ { root \/var\/www\/certbot; }/' \
+    deploy/nginx/tdc-qr.conf > /etc/nginx/conf.d/tdc-qr.conf
+nginx -t
+systemctl reload nginx
+
+# gia han chung chi tu dong (certbot.timer cua apt) roi nap lai nginx
+mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+printf '#!/bin/sh\nsystemctl reload nginx\n' > /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+
+echo "tdc-deploy xong: https://$DOMAIN"
+DEPLOY
+chmod 700 /usr/local/bin/tdc-deploy
+
+/usr/local/bin/tdc-deploy

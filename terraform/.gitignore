@@ -1,0 +1,8 @@
+.terraform/
+.build/
+*.tfstate
+*.tfstate.*
+# state chua mat khau CSDL / khoa ky: khong bao gio commit
+terraform.tfvars
+*.tfplan
+crash.log
