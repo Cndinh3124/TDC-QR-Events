@@ -128,4 +128,4 @@ Xem `loadtest/README.md` (k6: 2.000 sinh viên trong 3 phút rồi đợt đỉn
 - **Nền bản đồ CARTO** (dữ liệu OpenStreetMap): môi trường thử không ra Internet nên chưa thấy ảnh nền thật; CSP đã cho phép `*.basemaps.cartocdn.com`. Đổi từ `tile.openstreetmap.org` vì một số nhà mạng Việt Nam chặn tên miền này (DNS trả 127.0.0.1 + reset TLS).
 - **iOS Safari / Android Chrome thật**: mới thử bằng Chromium giả lập điện thoại.
 - **Tải thật** (k6) chưa chạy trên máy chủ thật; số đo ở `docs/nhat-ky/giai-doan-5.md` là trên máy dev.
-- **Terraform / hạ tầng dưới dạng mã**: chưa có (chưa biết nhà trường dùng nhà cung cấp nào); mô hình ở trên là một máy chủ thủ công.
+- **Terraform / hạ tầng dưới dạng mã**: có bản demo một máy EC2 ở `terraform/` (xem `terraform/README.md`); đã `plan` nhưng **chưa `apply`** nên chưa chạy thử thật. Mô hình RDS + ALB cho bản chạy thật chưa có.

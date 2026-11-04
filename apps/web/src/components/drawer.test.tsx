@@ -17,7 +17,7 @@ const { ApiError } = await import('../api');
 const row: AttendanceRow = {
   id: 'a1', mssv: '24211TM2001', fullName: 'Trần An', email: null, faculty: { id: 'f1', name: 'Khoa CNTT' },
   checkinAt: '2026-11-02T01:00:00Z', checkoutAt: null, timeliness: 'ON_TIME', source: 'SELF', reviewStatus: 'PENDING',
-  reviewNote: null, drlAwarded: null, confirmCode: 'ABCD2345', editCount: 1, distanceM: 12, deviceRef: '1a2b3c4d',
+  reviewNote: null, drlAwarded: null, confirmCode: 'ABCD2345', editCount: 1, distanceM: 12, deviceRef: '1a2b3c4d', client: 'Chrome 126 · Android 14',
   voidedAt: null, voidReason: null, flags: [{ code: 'DUPLICATE_MSSV', detail: null }],
 };
 
@@ -39,6 +39,8 @@ describe('AttendanceDrawer (A07)', () => {
     render(<MemoryRouter><AttendanceDrawer row={row} onClose={() => {}} /></MemoryRouter>);
     expect(screen.getByRole('dialog', { name: /Trần An/ })).toBeInTheDocument();
     expect(screen.getByText('ABCD2345')).toBeInTheDocument();
+    expect(screen.getByText('Thiết bị')).toBeInTheDocument();
+    expect(screen.getByText('Chrome 126 · Android 14')).toBeInTheDocument();
     expect(await screen.findByText('Lịch sử sửa (2)')).toBeInTheDocument();
     expect(calls).toEqual([['GET', '/admin/attendances/a1']]);
     expect(screen.getByText(/Cô Lan/)).toBeInTheDocument();
@@ -47,6 +49,15 @@ describe('AttendanceDrawer (A07)', () => {
     expect(screen.getByText('Đã duyệt', { selector: 'b' })).toBeInTheDocument(); // trang thai doi sang nhan tieng Viet
     expect(screen.getByRole('link', { name: 'Ngày hội việc làm' })).toHaveAttribute('href', '/su-kien/e2/duyet');
     expect(screen.getByText('MSSV gộp: 24211TM2009')).toBeInTheDocument();
+  });
+
+  it('khong co thong tin thiet bi: luot thu cong hien gach ngang, luot tu diem danh hien ly do', async () => {
+    reply = async () => ({ attendance: row, edits: [], otherAttendances: [] });
+    const { unmount } = render(<MemoryRouter><AttendanceDrawer row={{ ...row, client: null, source: 'MANUAL', deviceRef: null }} onClose={() => {}} /></MemoryRouter>);
+    expect(screen.getByText('Thiết bị').nextElementSibling).toHaveTextContent('—');
+    unmount();
+    render(<MemoryRouter><AttendanceDrawer row={{ ...row, client: null }} onClose={() => {}} /></MemoryRouter>);
+    expect(screen.getByText('Thiết bị').nextElementSibling).toHaveTextContent('Không có (đã quá hạn lưu trữ)');
   });
 
   it('loi tu API hien thong bao; Esc va nut Dong goi onClose', async () => {
