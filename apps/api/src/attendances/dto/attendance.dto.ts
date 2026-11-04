@@ -1,10 +1,12 @@
 // DTO vao / ra cua man duyet luot diem danh - dac ta 3.6, 3.7, 7
-// [BM] du lieu ra chi qua toAttendanceDto: khong co ip, user_agent, toa do, ma thiet bi day du.
+// [BM] du lieu ra chi qua toAttendanceDto: khong co ip, user_agent goc, toa do, ma thiet bi day du.
+// Chi co nhan rut gon `client` ("Chrome 126 · Android 14") do describeClient() doc tu user-agent.
 import { Transform } from 'class-transformer';
 import {
   ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsDate, IsEmail, IsIn, IsOptional, IsString, IsUUID, Length, MaxLength,
   ValidateIf,
 } from 'class-validator';
+import { describeClient } from '../../common/client-info';
 import { PaginationQuery } from '../../common/dto/pagination.dto';
 import { Attendance, ReviewStatus } from '../../public/entities/attendance.entity';
 import { AttendanceFlag } from '../../public/entities/attendance-flag.entity';
@@ -138,6 +140,8 @@ export interface AttendanceDto {
   distanceM: number | null;
   // 8 ky tu dau cua ma thiet bi: du de nhin ra "cung thiet bi", khong du de dung lai
   deviceRef: string | null;
+  // trinh duyet + he dieu hanh, vd "Chrome 126 · Android 14"; null voi luot them thu cong hoac da qua han luu tru
+  client: string | null;
   voidedAt: Date | null;
   voidReason: string | null;
   flags: Array<{ code: string; detail: Record<string, unknown> | null }>;
@@ -162,6 +166,7 @@ export function toAttendanceDto(a: Attendance, flags: AttendanceFlag[], showCode
     editCount: a.editCount,
     distanceM: a.distanceM,
     deviceRef: a.deviceId ? a.deviceId.slice(0, 8) : null,
+    client: describeClient(a.userAgent),
     voidedAt: a.voidedAt,
     voidReason: a.voidReason,
     flags: flags.map((f) => ({ code: f.code, detail: f.detailJson })),

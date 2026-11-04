@@ -1,9 +1,10 @@
 // Khung quan tri: menu trai xanh Doan, thanh tren; chua dang nhap thi ve /dang-nhap.
 import { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { api, Reminders } from '../api';
+import { api, Reminders, Unit } from '../api';
 import { useAuth } from '../auth';
 import { LogoTrio } from '../components/Brand';
+import { UserMenu } from '../components/UserMenu';
 
 // Man chi Doan truong: API da chan 403, day chi de khong hien man trong (dac ta 8.2)
 export function RequireAdmin() {
@@ -25,6 +26,7 @@ export function Layout() {
   const { pathname } = useLocation();
   const [due, setDue] = useState(0);
   const [unread, setUnread] = useState(0);
+  const [unitName, setUnitName] = useState<string | null>(null);
 
   // so nhac viec canh muc Tong quan; cap nhat moi lan doi man
   useEffect(() => {
@@ -41,6 +43,14 @@ export function Layout() {
     return () => window.removeEventListener('notifications-changed', refresh);
   }, [user, pathname]);
 
+  // ten don vi cho menu tai khoan (API tra 404 neu ngoai pham vi, nhung day la don vi cua chinh minh)
+  const unitId = user && !user.mustChangePassword ? user.unitId : null;
+  useEffect(() => {
+    setUnitName(null);
+    if (!unitId) return;
+    api<Unit>('GET', `/admin/units/${unitId}`).then((u) => setUnitName(u.name)).catch(() => {});
+  }, [unitId]);
+
   if (loading) return <div className="content">Đang tải…</div>;
   if (!user) return <Navigate to="/dang-nhap" replace />;
   // [BM] TK moi tao bat buoc doi mat khau truoc khi dung cac man khac (API cung chan)
@@ -49,7 +59,7 @@ export function Layout() {
   return (
     <div className="shell">
       <nav className="side">
-        <div className="brand"><LogoTrio size={30} /><span>Đoàn – Hội TDC</span></div>
+        <div className="brand"><LogoTrio size={30} /><span>Đoàn - Hội TDC</span></div>
         <NavLink to="/tong-quan">Tổng quan{due > 0 && <span className="nav-badge" title="Việc cần xử lý">{due}</span>}</NavLink>
         <div className="group">Hoạt động</div>
         <NavLink to="/hoat-dong" end>Hồ sơ hoạt động</NavLink>
@@ -79,8 +89,7 @@ export function Layout() {
           <NavLink to="/thong-bao" className="bell" aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : 'Thông báo'}>
             🔔{unread > 0 && <span className="nav-badge">{unread > 99 ? '99+' : unread}</span>}
           </NavLink>
-          <span>{user.fullName}</span>
-          <button className="btn" onClick={signOut}>Đăng xuất</button>
+          <UserMenu user={user} unitName={unitName} onSignOut={signOut} />
         </header>
         <main className="content wide">
           <Outlet />
