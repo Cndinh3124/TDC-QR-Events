@@ -3,9 +3,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
+import ExcelJS from 'exceljs';
 import { DataSource, EntityManager, In, Repository } from 'typeorm';
 import { AuditService } from '../audit/audit.service';
 import { CurrentUser } from '../common/current-user';
+import { describeClient } from '../common/client-info';
 import { Page } from '../common/dto/pagination.dto';
 import { Err } from '../common/errors';
 import { escapeLike } from '../common/sql';
@@ -17,6 +19,7 @@ import { Attendance } from '../public/entities/attendance.entity';
 import { AttendanceEdit } from '../public/entities/attendance-edit.entity';
 import { AttendanceFlag } from '../public/entities/attendance-flag.entity';
 import { PublicLookupService } from '../public/public-lookup.service';
+import { safeCell } from '../reports/reports.service';
 import {
   AttendanceChange, AttendanceDetail, AttendanceDto, AttendanceEditItem, AttendanceListQuery, attendanceAuditView, BulkDto,
   EditAttendanceAdminDto, ManualAttendanceDto, ManualFieldsDto, OtherAttendanceItem, ReviewDto, toAttendanceDto,
@@ -24,6 +27,15 @@ import {
 import { ReviewService } from './review.service';
 
 const DETAIL_OTHER_LIMIT = 30;
+const EXPORT_MAX_ROWS = 20_000;
+const VN_OFFSET_MS = 7 * 3600_000;
+const FLAG_LABEL: Record<string, string> = {
+  DUPLICATE_MSSV: 'Trùng MSSV', DEVICE_MULTI_MSSV: 'Thiết bị dùng cho nhiều MSSV', MSSV_MULTI_DEVICE: 'MSSV dùng nhiều thiết bị',
+  NAME_MISMATCH: 'Tên khác lần trước', FACULTY_MISMATCH: 'Khoa khác lần trước', NEW_DEVICE: 'Thiết bị mới',
+  BURST_SAME_FINGERPRINT: 'Nhiều MSSV cùng máy', GPS_OUTSIDE: 'Ngoài vùng GPS', GPS_LOW_ACCURACY: 'GPS kém chính xác',
+  GPS_MISSING: 'Không có GPS', NO_CHECKOUT: 'Chưa điểm danh ra', MANUAL_ENTRY: 'Thêm thủ công',
+};
+const REVIEW_LABEL: Record<string, string> = { PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Từ chối' };
 // truong trong lich su sua duoc hien (dung thu tu nay); khoa doi id -> ten
 const EDIT_FIELDS = ['mssv', 'fullName', 'email', 'facultyUnitId', 'checkinAt', 'checkoutAt', 'reviewStatus', 'voidedAt'];
 
@@ -53,8 +65,9 @@ export class AttendancesService {
 
   // ---------- doc ----------
 
-  async list(actor: CurrentUser, eventId: string, q: AttendanceListQuery): Promise<Page<AttendanceDto>> {
-    const { access } = await this.readable(actor, eventId);
+  // bo loc dung chung cho danh sach va xuat Excel: quyen + pham vi khoa + cac dieu kien loc
+  private async filtered(actor: CurrentUser, eventId: string, q: AttendanceListQuery) {
+    const { event, access } = await this.readable(actor, eventId);
     const qb = this.repo.createQueryBuilder('a').leftJoinAndSelect('a.faculty', 'f').where('a.eventId = :eventId', { eventId });
     await this.limitToFaculties(actor, access, qb);
     if (q.review) qb.andWhere('a.reviewStatus = :review', { review: q.review });
@@ -71,6 +84,11 @@ export class AttendancesService {
       const like = `%${escapeLike(q.q)}%`;
       qb.andWhere('(a.mssv LIKE :like OR a.fullName LIKE :like)', { like });
     }
+    return { event, access, qb };
+  }
+
+  async list(actor: CurrentUser, eventId: string, q: AttendanceListQuery): Promise<Page<AttendanceDto>> {
+    const { access, qb } = await this.filtered(actor, eventId, q);
     const [rows, total] = await qb
       .orderBy('a.checkinAt', 'ASC').addOrderBy('a.id', 'ASC')
       .skip((q.page - 1) * q.limit).take(q.limit)
@@ -78,6 +96,55 @@ export class AttendancesService {
     const flags = await this.flagsOf(rows.map((r) => r.id));
     const items = rows.map((r) => toAttendanceDto(r, flags.get(r.id) ?? [], access === 'manage'));
     return { items, total, page: q.page, limit: q.limit };
+  }
+
+  // [BM] xuat danh sach diem danh cua mot su kien ra Excel. Cung quyen + pham vi + bo loc voi list();
+  // khong xuat ma xac nhan / ma thiet bi / IP / toa do (cot Thiet bi la nhan trinh duyet + HDH); o chuoi qua safeCell; ghi nhat ky.
+  async exportXlsx(actor: CurrentUser, eventId: string, q: AttendanceListQuery): Promise<Buffer> {
+    const { event, qb } = await this.filtered(actor, eventId, q);
+    const rows = await qb.orderBy('a.checkinAt', 'ASC').addOrderBy('a.id', 'ASC').take(EXPORT_MAX_ROWS + 1).getMany();
+    if (rows.length > EXPORT_MAX_ROWS) {
+      throw Err.bad('EXPORT_TOO_LARGE', `Quá ${EXPORT_MAX_ROWS.toLocaleString('vi-VN')} lượt, hãy lọc bớt rồi xuất lại.`);
+    }
+    const flags = await this.flagsOf(rows.map((r) => r.id));
+    const when = (d: Date | null) => (d ? new Date(d.getTime() + VN_OFFSET_MS).toISOString().replace('T', ' ').slice(0, 16) : '');
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Điểm danh');
+    ws.columns = [
+      { header: 'STT', key: 'no', width: 6 }, { header: 'MSSV', key: 'mssv', width: 14 }, { header: 'Họ tên', key: 'name', width: 30 },
+      { header: 'Email', key: 'email', width: 30 }, { header: 'Khoa', key: 'faculty', width: 30 },
+      { header: 'Giờ vào', key: 'in', width: 17 }, { header: 'Giờ ra', key: 'out', width: 17 }, { header: 'Đúng giờ', key: 'timely', width: 11 },
+      { header: 'Thiết bị', key: 'client', width: 26 },
+      { header: 'Nguồn', key: 'source', width: 12 }, { header: 'Duyệt', key: 'review', width: 12 }, { header: 'Ghi chú duyệt', key: 'note', width: 28 },
+      { header: 'ĐRL', key: 'drl', width: 8 }, { header: 'Cờ nghi vấn', key: 'flags', width: 36 }, { header: 'Đã hủy', key: 'voided', width: 28 },
+    ];
+    rows.forEach((a, i) => {
+      ws.addRow({
+        no: i + 1, mssv: safeCell(a.mssv), name: safeCell(a.fullName), email: safeCell(a.email ?? ''), faculty: safeCell(a.faculty?.name ?? ''),
+        in: when(a.checkinAt), out: when(a.checkoutAt), timely: a.timeliness === 'ON_TIME' ? 'Đúng giờ' : 'Trễ',
+        client: describeClient(a.userAgent) ?? '',
+        source: a.source === 'MANUAL' ? 'Thủ công' : 'Tự điểm danh', review: REVIEW_LABEL[a.reviewStatus] ?? a.reviewStatus,
+        note: safeCell(a.reviewNote ?? ''), drl: a.drlAwarded, flags: (flags.get(a.id) ?? []).map((f) => FLAG_LABEL[f.code] ?? f.code).join(', '),
+        voided: a.voidedAt ? safeCell(a.voidReason ? `Đã hủy: ${a.voidReason}` : 'Đã hủy') : '',
+      });
+    });
+    ws.getRow(1).font = { bold: true };
+    ws.views = [{ state: 'frozen', ySplit: 1 }];
+    ws.autoFilter = { from: 'A1', to: 'O1' };
+
+    const info = wb.addWorksheet('Thông tin');
+    info.columns = [{ key: 'k', width: 22 }, { key: 'v', width: 50 }];
+    info.addRows([
+      { k: 'Sự kiện', v: safeCell(event.title) }, { k: 'Bắt đầu', v: when(event.startAt) }, { k: 'Kết thúc', v: when(event.endAt) },
+      { k: 'Số dòng xuất', v: rows.length }, { k: 'Xuất lúc', v: when(new Date()) },
+    ]);
+    info.getColumn('k').font = { bold: true };
+
+    await this.audit.log(actor, 'ATTENDANCE_EXPORT', 'event', eventId, {
+      after: { rows: rows.length, review: q.review ?? null, voided: q.voided, flagged: q.flagged ?? null, source: q.source ?? null },
+    });
+    return Buffer.from(await wb.xlsx.writeBuffer());
   }
 
   async summary(actor: CurrentUser, eventId: string): Promise<AttendanceSummary> {

@@ -179,6 +179,7 @@ export interface AttendanceRow {
   editCount: number;
   distanceM: number | null;
   deviceRef: string | null;
+  client: string | null; // "Chrome 126 · Android 14"
   voidedAt: string | null;
   voidReason: string | null;
   flags: Array<{ code: string; detail: Record<string, unknown> | null }>;

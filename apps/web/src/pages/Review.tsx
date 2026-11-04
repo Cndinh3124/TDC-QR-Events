@@ -1,7 +1,7 @@
 // Man duyet luot diem danh cua mot su kien: loc, duyet / tu choi, hang loat, them / sua / huy, chot - dac ta 3.6, 3.7
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api, ApiError, AttendanceRow, AttendanceSummary, EventItem, Page, qs } from '../api';
+import { api, ApiError, AttendanceRow, AttendanceSummary, download, EventItem, Page, qs } from '../api';
 import { useAuth } from '../auth';
 import { AttendanceDrawer } from '../components/AttendanceDrawer';
 import { AttendanceForm } from '../components/AttendanceForm';
@@ -82,6 +82,23 @@ export function Review() {
     }
   }
 
+  // [NV] xuat Excel danh sach diem danh theo dung bo loc dang chon (tab, co, tu khoa), khong phan trang
+  async function exportXlsx() {
+    setBusy(true);
+    setError('');
+    try {
+      const query = qs({
+        q: q.trim() || undefined, flagged: flagged || undefined,
+        review: tab && tab !== 'VOIDED' ? tab : undefined, voided: tab === 'VOIDED' ? 'only' : undefined,
+      });
+      await download(`/admin/events/${id}/attendances.xlsx${query}`, 'diem-danh-su-kien.xlsx');
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Không xuất được tệp.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!ev) return error ? <div className="error">{error}</div> : <p>Đang tải…</p>;
 
   const finalized = ev.status === 'FINALIZED';
@@ -103,6 +120,7 @@ export function Review() {
           <p className="sub"><StatusBadge status={ev.status} /> · {ev.hasDrl ? `${ev.drlPoints} điểm rèn luyện` : 'Không cộng điểm'}{ev.requireCheckout ? ' · Bắt buộc điểm danh ra' : ''}</p>
         </div>
         <div className="row">
+          <button className="btn" disabled={busy} title="Xuất theo bộ lọc đang chọn" onClick={exportXlsx}>Xuất Excel</button>
           {mutable && <button className="btn" onClick={() => setDlg({ kind: 'manual' })}>+ Thêm thủ công</button>}
           {reviewable && sum && sum.cleanPending > 0 && (
             <button className="btn" disabled={busy} onClick={() => run(() => bulk('APPROVE_CLEAN'))}>Duyệt {sum.cleanPending} lượt sạch</button>
