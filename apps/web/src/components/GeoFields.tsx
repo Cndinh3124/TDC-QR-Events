@@ -70,7 +70,7 @@ export function GeoFields({ value, onChange }: { value: Geo; onChange: (g: Geo) 
       <div className="row">
         <button type="button" className="btn" onClick={useMyLocation}>Lấy vị trí hiện tại của tôi</button>
         {hasPoint && (
-          <a href={`https://www.openstreetmap.org/?mlat=${value.latitude}&mlon=${value.longitude}#map=18/${value.latitude}/${value.longitude}`} target="_blank" rel="noreferrer">
+          <a href={`https://www.google.com/maps?q=${value.latitude},${value.longitude}`} target="_blank" rel="noreferrer">
             Xem trên bản đồ
           </a>
         )}

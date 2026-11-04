@@ -57,6 +57,7 @@ export function AttendanceDrawer({ row, onClose }: { row: AttendanceRow; onClose
           <dt>Giờ vào</dt><dd>{fmt(a.checkinAt)} · {a.timeliness === 'ON_TIME' ? 'Đúng giờ' : 'Trễ giờ'}</dd>
           <dt>Giờ ra</dt><dd>{a.checkoutAt ? fmt(a.checkoutAt) : '—'}</dd>
           <dt>Nguồn</dt><dd>{a.source === 'MANUAL' ? 'Thêm thủ công' : 'Sinh viên tự điểm danh'}{a.deviceRef ? ` · máy ${a.deviceRef}` : ''}</dd>
+          <dt>Thiết bị</dt><dd>{a.client ?? (a.source === 'MANUAL' ? '—' : 'Không có (đã quá hạn lưu trữ)')}</dd>
           <dt>Khoảng cách</dt><dd>{a.distanceM === null ? '—' : `${a.distanceM} m`}</dd>
           <dt>Mã xác nhận</dt><dd className="mono">{a.confirmCode ?? 'Ẩn'}</dd>
           <dt>Trạng thái</dt>

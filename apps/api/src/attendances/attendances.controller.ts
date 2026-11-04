@@ -1,5 +1,6 @@
 // /api/admin: duyet luot diem danh, chot su kien - quyen va pham vi kiem tra o service
-import { Body, Controller, Get, Header, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query, Res, StreamableFile } from '@nestjs/common';
+import type { Response } from 'express';
 import { CurrentUser as CurrentUserType } from '../common/current-user';
 import { CurrentUser, Roles } from '../common/decorators';
 import { ReasonDto } from '../common/dto/reason.dto';
@@ -20,6 +21,20 @@ export class AttendancesController {
   @Get('events/:id/attendances')
   list(@CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Query() q: AttendanceListQuery) {
     return this.attendances.list(u, id, q);
+  }
+
+  // [BM] xuat Excel: cung bo loc voi danh sach; ten tep co dinh (khong dua tieu de su kien vao header)
+  @Get('events/:id/attendances.xlsx')
+  async exportXlsx(
+    @CurrentUser() u: CurrentUserType, @Param('id', ParseUUIDPipe) id: string, @Query() q: AttendanceListQuery,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const file = await this.attendances.exportXlsx(u, id, q);
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="diem-danh-su-kien.xlsx"', 'Cache-Control': NO_STORE,
+    });
+    return new StreamableFile(file);
   }
 
   @Header('Cache-Control', NO_STORE)
